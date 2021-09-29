@@ -1,0 +1,14 @@
+#tempFolders
+savedData/*
+!savedData/.gitkeep 
+
+#env
+.env
+config.json
+
+
+#osx remnants
+.DS_Store
+
+#node stuff
+node_modules

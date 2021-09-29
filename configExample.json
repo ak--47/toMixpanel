@@ -1,0 +1,25 @@
+{
+    "source": {
+        "name": "amplitude",
+        "params": {
+            "api_key": "{{amplitude api key}}",
+            "api_secret": "{{ amplitude api secret }}",
+            "start_date" : "2021-09-17",
+            "end_date": "2021-09-17"
+        },
+        "options" : {
+            "save_local_copy": true,
+            "is EU?": false
+        }
+    },
+    "destination": {
+        "name": "mixpanel",
+        "project_id": "{{ project id }}", 
+        "token": "{{ project token }}",
+        "service_account_user": "{{ mp service account }}",
+        "service_account_pass": "{{ mp service secret }}",
+        "options": {
+            "is EU?" : false
+        }
+    }
+}
