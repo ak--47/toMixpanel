@@ -14,6 +14,7 @@ const readFilePromisified = promisify(readFile);
 
 //CONFIG + LIMITS
 const ENDPOINT_URL = `https://api.mixpanel.com/import`
+const ENDPOINT_URL_EU = `https://api-eu.mixpanel.com/import`
 const EVENTS_PER_BATCH = 2000
 const BYTES_PER_BATCH = 2 * 1024 * 1024
 
@@ -45,7 +46,7 @@ async function main(credentials = {}, dataFile = ``) {
         }
     }
 
-    console.log(`   parsed ${numberWithCommas(allData.length)} events from ${dataFile}`);
+    console.log(`       parsed ${numberWithCommas(allData.length)} events from ${dataFile}`);
 
     // //TRANSFORM
     // for (let singleEvent of allData) {
@@ -74,14 +75,14 @@ async function main(credentials = {}, dataFile = ``) {
 
 
     //FLUSH
-    console.log(`   sending ${numberWithCommas(allData.length)} events in ${numberWithCommas(batches.length)} batches`);
+    console.log(`       sending ${numberWithCommas(allData.length)} events in ${numberWithCommas(batches.length)} batches`);
     let numRecordsImported = 0;
     for (let eventBatch of compressed) {
         let result = await sendDataToMixpanel(credentials, eventBatch);
         // console.log(`   done ✅`)
         // console.log(`   mixpanel response:`)
         // console.log(result);
-        console.log('\n')
+        //console.log('\n')
         numRecordsImported += result.num_records_imported || 0;
     }
 

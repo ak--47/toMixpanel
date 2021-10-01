@@ -40,6 +40,7 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
         let json = jsonl.map(line => JSON.parse(line));
 
         //transform user props
+        //do a better job: https://developers.amplitude.com/docs/identify-api
         writePath = path.resolve(`${dataPath}/profiles`);
         let mpUserProfiles = json.filter((amplitudeEvent) => {
                 return Object.keys(amplitudeEvent.user_properties).length !== 0;
@@ -114,31 +115,31 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
         writePath = path.resolve(`${dataPath}/mergeTables`);
 
         for (let ampEvent of json) {
-            //pair device_id & user_id
-            if (ampEvent.device_id && ampEvent.user_id) {
-                mergeTable.push({
-                    "event": "$merge",
-                    "properties": {
-                        "$distinct_ids": [
-                            ampEvent.device_id,
-                            ampEvent.user_id
-                        ]
-                    }
-                });
-            }
+            // //pair device_id & user_id
+            // if (ampEvent.device_id && ampEvent.user_id) {
+            //     mergeTable.push({
+            //         "event": "$merge",
+            //         "properties": {
+            //             "$distinct_ids": [
+            //                 ampEvent.device_id,
+            //                 ampEvent.user_id
+            //             ]
+            //         }
+            //     });
+            // }
 
-            //pair device_id & amplitude_id
-            if (ampEvent.device_id && ampEvent.amplitude_id) {
-                mergeTable.push({
-                    "event": "$merge",
-                    "properties": {
-                        "$distinct_ids": [
-                            ampEvent.device_id,
-                            ampEvent.amplitude_id.toString()
-                        ]
-                    }
-                })
-            };
+            // //pair device_id & amplitude_id
+            // if (ampEvent.device_id && ampEvent.amplitude_id) {
+            //     mergeTable.push({
+            //         "event": "$merge",
+            //         "properties": {
+            //             "$distinct_ids": [
+            //                 ampEvent.device_id,
+            //                 ampEvent.amplitude_id.toString()
+            //             ]
+            //         }
+            //     })
+            // };
 
             //pair user_id & amplitude_id
             if (ampEvent.user_id && ampEvent.amplitude_id) {
