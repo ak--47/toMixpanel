@@ -29,10 +29,6 @@ async function main() {
     }
 
 
-
-
-
-
     //create a root folder for everything
     const now = dayjs().format('YYYY-MM-DD HH.MM.ss A');
     const directoryName = `${config.source.name} ${now}`;
