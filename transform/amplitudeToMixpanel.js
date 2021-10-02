@@ -39,21 +39,44 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
         let jsonl = file.toString('utf-8').trim().split('\n');
         let json = jsonl.map(line => JSON.parse(line));
 
+        //mapping amp default to mp defauls
+        //https://developers.amplitude.com/docs/identify-api
+        //https://help.mixpanel.com/hc/en-us/articles/115004613766-Default-Properties-Collected-by-Mixpanel
+        let ampMixPairs = [
+            ["app_version", "$app_version_string"],
+            ["os_name", "$os"],
+            ["os_version", "$os_version"],
+            ["device_brand", "$brand"],
+            ["device_manufacturer", "$manufacturer"],
+            ["device_model", "$model"],
+            ["region", "$region"],
+            ["city", "$city"]
+        ]
+
         //transform user props
-        //do a better job: https://developers.amplitude.com/docs/identify-api
         writePath = path.resolve(`${dataPath}/profiles`);
         let mpUserProfiles = json.filter((amplitudeEvent) => {
                 return Object.keys(amplitudeEvent.user_properties).length !== 0;
             })
             .map((amplitudeEvent) => {
-                return {
+                let profile = {
                     "$token": mpToken,
                     "$distinct_id": amplitudeEvent.user_id,
                     "$ip": amplitudeEvent.ip_address,
                     "$set": amplitudeEvent.user_properties
                 }
 
+                //include defaults, if they exist
+                for (let ampMixPair of ampMixPairs) {
+                    if (amplitudeEvent[ampMixPair[0]]) {
+                        profile.$set[ampMixPair[1]] = amplitudeEvent[ampMixPair[0]]
+                    }
+                }
+
+                return profile;
+
             });
+
 
         totalProfileEntries += mpUserProfiles.length;
         console.log(`       transforming user profiles... (${smartCommas(mpUserProfiles.length)} profiles)`);
@@ -91,6 +114,14 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
             delete amplitudeEvent.event_properties;
             delete amplitudeEvent.groups;
             delete amplitudeEvent.data;
+
+            //fill in defaults & delete from amp data (if found)
+            for (let ampMixPair of ampMixPairs) {
+                if (amplitudeEvent[ampMixPair[0]]) {
+                    mixpanelEvent.properties[ampMixPair[1]] = amplitudeEvent[ampMixPair[0]];
+                    delete amplitudeEvent[ampMixPair[0]];
+                }
+            }
 
             //gather everything else
             mixpanelEvent.properties = { ...amplitudeEvent, ...mixpanelEvent.properties }
