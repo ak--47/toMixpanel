@@ -45,6 +45,7 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
         let ampMixPairs = [
             ["app_version", "$app_version_string"],
             ["os_name", "$os"],
+            ["os_name", "$browser"],
             ["os_version", "$os_version"],
             ["device_brand", "$brand"],
             ["device_manufacturer", "$manufacturer"],
