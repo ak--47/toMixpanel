@@ -7,12 +7,13 @@ import fetch from 'node-fetch'; //https://www.npmjs.com/package/node-fetch
 const readFilePromisified = promisify(readFile);
 
 //CONFIG + LIMITS
-const ENDPOINT_URL = `http://api.mixpanel.com/engage`
+const ENDPOINT_URL_US = `http://api.mixpanel.com/engage`
 const ENDPOINT_URL_EU = `https://api-eu.mixpanel.com/engage`
 const PROFILES_PER_REQUEST = 50
 
 
-async function main(dataFile) {
+async function main(dataFile, isEU) {
+    let ENDPOINT_URL = isEU ? ENDPOINT_URL_EU : ENDPOINT_URL_US;
     //LOAD data files
     let file = await readFilePromisified(dataFile).catch((e) => {
         console.error(`failed to load ${dataFile}... does it exist?\n`);
@@ -59,49 +60,51 @@ async function main(dataFile) {
     //console.log(`   successfully imported ${numberWithCommas(numRecordsImported)} events`)
     return numRecordsImported;
 
-}
+    //HELPERS
+    async function sendDataToMixpanel(batch) {
+        //let authString = 'Basic ' + Buffer.from(auth.username + ':' + auth.password, 'binary').toString('base64');
+        let url = `${ENDPOINT_URL}?verbose=1`
+        let options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain'
 
-
-//HELPERS
-async function sendDataToMixpanel(batch) {
-    //let authString = 'Basic ' + Buffer.from(auth.username + ':' + auth.password, 'binary').toString('base64');
-    let url = `${ENDPOINT_URL}?verbose=1`
-    let options = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'text/plain'
-
-        },
-        body: `data=${JSON.stringify(batch)}`
-    }
-
-    try {
-        let req = await fetch(url, options);
-        let res = await req.json();
-        // console.log(`${JSON.stringify(res)}\n`)
-        return res;
-        
-    } catch (e) {
-        console.log(`   problem with request:\n${e}`)
-    }
-}
-
-function chunkForNumOfEvents(arrayOfProfiles, chunkSize) {
-    return arrayOfProfiles.reduce((resultArray, item, index) => {
-        const chunkIndex = Math.floor(index / chunkSize)
-
-        if (!resultArray[chunkIndex]) {
-            resultArray[chunkIndex] = [] // start a new chunk
+            },
+            body: `data=${JSON.stringify(batch)}`
         }
 
-        resultArray[chunkIndex].push(item)
+        try {
+            let req = await fetch(url, options);
+            let res = await req.json();
+            // console.log(`${JSON.stringify(res)}\n`)
+            return res;
 
-        return resultArray
-    }, [])
+        } catch (e) {
+            console.log(`   problem with request:\n${e}`)
+        }
+    }
+
+    function chunkForNumOfEvents(arrayOfProfiles, chunkSize) {
+        return arrayOfProfiles.reduce((resultArray, item, index) => {
+            const chunkIndex = Math.floor(index / chunkSize)
+
+            if (!resultArray[chunkIndex]) {
+                resultArray[chunkIndex] = [] // start a new chunk
+            }
+
+            resultArray[chunkIndex].push(item)
+
+            return resultArray
+        }, [])
+    }
+
+    function numberWithCommas(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
 }
 
-function numberWithCommas(x) {
-    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
+
+
 
 export default main;

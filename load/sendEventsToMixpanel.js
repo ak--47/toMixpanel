@@ -9,21 +9,21 @@ import md5 from 'md5'; //https://www.npmjs.com/package/md5
 import isGzip from 'is-gzip'; //https://www.npmjs.com/package/is-gzip
 import gun from 'node-gzip'; //https://www.npmjs.com/package/node-gzip
 
-const readFilePromisified = promisify(readFile); 
+const readFilePromisified = promisify(readFile);
 
 
 //CONFIG + LIMITS
-const ENDPOINT_URL = `https://api.mixpanel.com/import`
+const ENDPOINT_URL_US = `https://api.mixpanel.com/import`
 const ENDPOINT_URL_EU = `https://api-eu.mixpanel.com/import`
 const EVENTS_PER_BATCH = 2000
 const BYTES_PER_BATCH = 2 * 1024 * 1024
 
 
 
-async function main(credentials = {}, dataFile = ``) {
-    
+async function main(credentials = {}, dataFile = ``, isEU) {
+    let ENDPOINT_URL = isEU ? ENDPOINT_URL_EU : ENDPOINT_URL_US;
     //LOAD data files
-    let file = await readFilePromisified(dataFile).catch((e)=>{
+    let file = await readFilePromisified(dataFile).catch((e) => {
         console.error(`failed to load ${dataFile}... does it exist?\n`);
         console.log(`if you require some test data, try 'npm run generate' first...`);
         process.exit(1);
@@ -89,80 +89,80 @@ async function main(credentials = {}, dataFile = ``) {
     //FINISH
     //console.log(`   successfully imported ${numberWithCommas(numRecordsImported)} events`)
     return numRecordsImported;
-}
 
-//HELPERS
-function chunkForNumOfEvents(arrayOfEvents, chunkSize) {
-    return arrayOfEvents.reduce((resultArray, item, index) => {
-        const chunkIndex = Math.floor(index / chunkSize)
+    //HELPERS
+    function chunkForNumOfEvents(arrayOfEvents, chunkSize) {
+        return arrayOfEvents.reduce((resultArray, item, index) => {
+            const chunkIndex = Math.floor(index / chunkSize)
 
-        if (!resultArray[chunkIndex]) {
-            resultArray[chunkIndex] = [] // start a new chunk
-        }
+            if (!resultArray[chunkIndex]) {
+                resultArray[chunkIndex] = [] // start a new chunk
+            }
 
-        resultArray[chunkIndex].push(item)
+            resultArray[chunkIndex].push(item)
 
-        return resultArray
-    }, [])
-}
-
-function chunkForSize(arrayOfBatches, maxBytes) {
-    return arrayOfBatches.reduce((resultArray, item, index) => {
-        //assume each character is a byte
-        const currentLengthInBytes = JSON.stringify(item).length
-
-        if (currentLengthInBytes >= maxBytes) {
-            //if the batch is too big; cut it in half
-            //todo: make this is a little smarter
-            let midPointIndex = Math.ceil(item.length / 2);
-            let firstHalf = item.slice(0, midPointIndex);
-            let secondHalf = item.slice(-midPointIndex);
-            resultArray.push(firstHalf);
-            resultArray.push(secondHalf);
-        } else {
-            resultArray.push(item)
-        }
-
-        return resultArray
-    }, [])
-}
-
-async function compressChunks(arrayOfBatches) {
-    const allBatches = arrayOfBatches.map(async function (batch) {
-        return await gun.gzip(JSON.stringify(batch))
-    });
-    return Promise.all(allBatches);
-}
-
-async function sendDataToMixpanel(auth, batch) {
-    let authString = 'Basic ' + Buffer.from(auth.username + ':' + auth.password, 'binary').toString('base64');
-    let url = `${ENDPOINT_URL}?project_id=${auth.project_id}&strict=1`
-    let options = {
-        method: 'POST',
-        headers: {
-            'Authorization': authString,
-            'Content-Type': 'application/json',
-            'Content-Encoding': 'gzip'
-
-        },
-        body: batch
+            return resultArray
+        }, [])
     }
 
-    try {
-        let req = await fetch(url, options);
-        let res = await req.json();
-        return res;
-        //console.log(`${res}\n`)
-    } catch (e) {
-        console.log(`   problem with request:\n${e}`)
+    function chunkForSize(arrayOfBatches, maxBytes) {
+        return arrayOfBatches.reduce((resultArray, item, index) => {
+            //assume each character is a byte
+            const currentLengthInBytes = JSON.stringify(item).length
+
+            if (currentLengthInBytes >= maxBytes) {
+                //if the batch is too big; cut it in half
+                //todo: make this is a little smarter
+                let midPointIndex = Math.ceil(item.length / 2);
+                let firstHalf = item.slice(0, midPointIndex);
+                let secondHalf = item.slice(-midPointIndex);
+                resultArray.push(firstHalf);
+                resultArray.push(secondHalf);
+            } else {
+                resultArray.push(item)
+            }
+
+            return resultArray
+        }, [])
     }
+
+    async function compressChunks(arrayOfBatches) {
+        const allBatches = arrayOfBatches.map(async function(batch) {
+            return await gun.gzip(JSON.stringify(batch))
+        });
+        return Promise.all(allBatches);
+    }
+
+    async function sendDataToMixpanel(auth, batch) {
+        let authString = 'Basic ' + Buffer.from(auth.username + ':' + auth.password, 'binary').toString('base64');
+        let url = `${ENDPOINT_URL}?project_id=${auth.project_id}&strict=1`
+        let options = {
+            method: 'POST',
+            headers: {
+                'Authorization': authString,
+                'Content-Type': 'application/json',
+                'Content-Encoding': 'gzip'
+
+            },
+            body: batch
+        }
+
+        try {
+            let req = await fetch(url, options);
+            let res = await req.json();
+            return res;
+            //console.log(`${res}\n`)
+        } catch (e) {
+            console.log(`   problem with request:\n${e}`)
+        }
+    }
+
+    function numberWithCommas(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
 }
 
-function numberWithCommas(x) {
-    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
 
-//that's all folks!
-// main(creds, pathToDataFile);
 
 export default main;

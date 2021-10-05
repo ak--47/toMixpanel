@@ -16,8 +16,19 @@ import amplitudeETL from './connectors/amplitudeETL.js'
 
 async function main() {
     console.log('starting up!')
-    //config
-    const userConfig = await readFile('./config.json')
+    //figure out where config is
+    let cliArgs = process.argv;
+    let configFromArgs = cliArgs.filter(argument => argument.includes('.json'));
+    let configPath;
+    if (configFromArgs.length > 0) {
+        configPath = configFromArgs[0];
+    }
+
+    else {
+        configPath = './config.json';
+    }
+    console.log(configPath)
+    const userConfig = await readFile(configPath)
     let config;
     try {
         config = JSON.parse(userConfig)

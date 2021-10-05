@@ -22,7 +22,7 @@ async function amplitudeETL(config, directoryName) {
     }
 
     console.log('EXTRACT!\n')
-    let extractedData = await amplitudeExtract(credentials, dates, directoryName);
+    let extractedData = await amplitudeExtract(credentials, dates, directoryName, config.source.options['is EU?']);
 
     console.log('TRANSFORM!\n')
     let transformedData = await amplitudeTransform(extractedData, `./savedData/${directoryName}`, config.destination.token);
@@ -38,7 +38,7 @@ async function amplitudeETL(config, directoryName) {
     let totalEventsImported = -1;
     //events
     for await (let eventDataFile of eventPaths) {
-        let eventsImported = await sendEventsToMixpanel(mixpanelCreds, eventDataFile);
+        let eventsImported = await sendEventsToMixpanel(mixpanelCreds, eventDataFile, config.destination.options['is EU?']);
         totalEventsImported += eventsImported
     }
 
@@ -49,7 +49,7 @@ async function amplitudeETL(config, directoryName) {
     //mergeTables
     let totalMergeTables = -1
     for await (let mergeTable of mergeTablePaths) {
-        let mergeTablesImported = await sendEventsToMixpanel(mixpanelCreds, mergeTable);
+        let mergeTablesImported = await sendEventsToMixpanel(mixpanelCreds, mergeTable, config.destination.options['is EU?']);
         totalMergeTables += mergeTablesImported
     }
 
@@ -59,7 +59,7 @@ async function amplitudeETL(config, directoryName) {
     console.log('   profiles:\n')
     let totalUsersImported = 0
     for await (let profileFile of profilePaths) {
-        let profilesImported = await sendProfilesToMixpanel(profileFile)
+        let profilesImported = await sendProfilesToMixpanel(profileFile, config.destination.options['is EU?'])
         totalUsersImported += profilesImported
     }
 

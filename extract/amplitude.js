@@ -11,7 +11,7 @@ import { default as gun } from 'node-gzip';
 
 //docs: https://developers.amplitude.com/docs/export-api#export-api-parameters
 //todo EU residency? https://developers.amplitude.com/docs/http-api-v2
-const baseURL = `https://amplitude.com/api/2/export`
+const baseURL_US = `https://amplitude.com/api/2/export`
 const baseURL_EU = `https://analytics.eu.amplitude.com/api/2/export`
 
 const streamPipeline = promisify(pipeline);
@@ -19,7 +19,8 @@ const readFilePromisified = promisify(readFile);
 const writeFilePromisified = promisify(writeFile);
 const readDirPromisified = promisify(readdir);
 
-async function main(creds, options, directory = "foo") {
+async function main(creds, options, directory = "foo", isEU) {
+    let baseURL = isEU ? baseURL_EU : baseURL_US;    
     //usually just for testing
     if (!existsSync(`./savedData/${directory}`)) {
         mkdirSync(`./savedData/${directory}`);
