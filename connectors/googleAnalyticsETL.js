@@ -1,15 +1,17 @@
 import gaExtract from '../extract/googleAnalytics.js'
+import gaTransform from '../transform/gaToMixpanel.js'
 
 async function googleAnalyticsETL(config, directoryName) {
     const { bucket_name, keyFile, project_id } = config.source.params;
 
     console.log('EXTRACT!\n')
-    let extract = await gaExtract(project_id, bucket_name, keyFile, directoryName);
+    let extractedFiles = await gaExtract(project_id, bucket_name, keyFile, directoryName);
 
-    console.log('TRANSFORM!\n')
+    console.log('\nTRANSFORM!\n')
+    let transform = await gaTransform(extractedFiles, `./savedData/${directoryName}`, config.destination.token);
 
 
-    console.log('LOAD!')
+    console.log('\nLOAD!\n')
 
 
 }
