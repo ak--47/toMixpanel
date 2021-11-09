@@ -10,9 +10,11 @@ import { promisify } from 'util'
 import * as path from 'path';
 import dayjs from 'dayjs';
 
-
 //connectors
 import amplitudeETL from './connectors/amplitudeETL.js'
+import googleAnalyticsETL from './connectors/googleAnalyticsETL.js'
+
+
 
 async function main() {
     console.log('starting up!')
@@ -22,12 +24,10 @@ async function main() {
     let configPath;
     if (configFromArgs.length > 0) {
         configPath = configFromArgs[0];
-    }
-
-    else {
+    } else {
         configPath = './config.json';
     }
-    console.log(configPath)
+    console.log(`found ${configPath}`);
     const userConfig = await readFile(configPath)
     let config;
     try {
@@ -52,7 +52,9 @@ async function main() {
             console.log(`lets migrate data from ${config.source.name} to Mixpanel!\n\n`);
             amplitudeETL(config, directoryName);
             break;
-        case 'foo':
+        case 'googleanalytics':
+            console.log(`lets migrate data from ${config.source.name} to Mixpanel!\n\n`);
+            googleAnalyticsETL(config, directoryName);
             // code block
             break;
         default:
@@ -63,4 +65,3 @@ async function main() {
 }
 
 main()
-

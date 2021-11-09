@@ -4,7 +4,8 @@ savedData/*
 
 #env
 .env
-config.json
+configAMP.json
+configGA360.json
 
 
 #osx remnants
