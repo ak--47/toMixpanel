@@ -21,7 +21,7 @@ export default async function main(projectId, bucketName, keyFileData, destPath)
 
     //auth
     const storage = new Storage({ projectId, keyFilename });
-    console.log(`   attempting to auth with bucket: ${bucketName} as ${keyFileData.client_email.split('@')[0]}`)
+    console.log(`   attempting to auth with bucket: ${bucketName} as user: ${keyFileData.client_email.split('@')[0]}`)
 
     try {
         await (await storage.bucket(bucketName).getFiles());
@@ -92,18 +92,18 @@ export default async function main(projectId, bucketName, keyFileData, destPath)
         try {
             parsed = JSON.parse(fileData);
             await writeFilePromisified(writePath, JSON.stringify(parsed));
-            console.log(`       sucessfully parsed ${fileName} as JSON`)
+            console.log(`           sucessfully parsed ${fileName} as JSON`)
             validFilePaths.push(writePath)
         } catch (e) {
             //it's probably NDJSON, so iterate over each line
             try {
                 parsed = fileData.split('\n').map(line => JSON.parse(line));
                 await writeFilePromisified(writePath, JSON.stringify(parsed));
-                console.log(`   sucessfully parsed ${fileName} as NDJSON`)
+                console.log(`       sucessfully parsed ${fileName} as NDJSON`)
                 validFilePaths.push(writePath)
             } catch (e) {
                 //if we don't have JSON or NDJSON... skip...
-                console.log(`   failed to parse: ${fileName} (not JSON/NDJSON) skipping...`)
+                console.log(`       failed to parse: ${fileName} (not JSON/NDJSON) skipping...`)
                 continue verifyFiles;
             }
         }

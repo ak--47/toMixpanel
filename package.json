@@ -7,7 +7,7 @@
     "start": "node index.js",
     "prune": "rm -rf ./savedData/*",
     "amplitude": "npm run prune && node --inspect ./index.js ./configAMP.json",
-    "ga360" : "npm run prune && node --inspect ./index.js ./configGA360.json"
+    "ga360": "npm run prune && node --inspect ./index.js ./configGA360.json"
   },
   "type": "module",
   "keywords": [],
@@ -19,6 +19,7 @@
     "dayjs": "^1.10.7",
     "dotenv": "^10.0.0",
     "is-gzip": "^2.0.0",
+    "jsonschema": "^1.4.0",
     "md5": "^2.3.0",
     "node-fetch": "^3.0.0",
     "node-gzip": "^1.1.2"

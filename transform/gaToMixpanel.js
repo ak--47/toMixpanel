@@ -1,10 +1,13 @@
 //deps
-import { createWriteStream, readFile, writeFile, statSync, mkdirSync, existsSync, readdir } from 'fs';
+import { createWriteStream, readFile, readFileSync, writeFile, statSync, mkdirSync, existsSync, readdir } from 'fs';
 import { promisify } from 'util';
 import dayjs from 'dayjs';
 import * as path from 'path';
 import md5 from 'md5';
+import { validate } from 'jsonschema';
 
+
+const gaSchema = JSON.parse(readFileSync(path.resolve('./transform/gaSchema.json'), 'utf-8'));
 const readFilePromisified = promisify(readFile);
 const writeFilePromisified = promisify(writeFile);
 
@@ -32,13 +35,24 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
 
 
     //walk each file    
-    for (let filePath of listOfFilePaths) {
+    walkAndTransform: for (let filePath of listOfFilePaths) {
+        //load + parse file
         let fileNamePrefix = filePath.split('/').pop();
         console.log(`   processing ${fileNamePrefix}`);
+        let file = await readFilePromisified(filePath);
+        let json = JSON.parse(file.toString('utf-8').trim());
 
-        //     let file = await readFilePromisified(filePath);
-        //     let jsonl = file.toString('utf-8').trim().split('\n');
-        //     let json = jsonl.map(line => JSON.parse(line));
+        //validate against GA schema: https://storage.googleapis.com/e-nor/visualizations/bigquery/ga360-schema.html
+        let validator = validate(json, gaSchema).errors;
+        if (validator.length > 0) {
+            console.log(`       ${fileNamePrefix} does not conform to google analytics schema; skipping...`)
+            console.log("\n");
+            continue walkAndTransform;
+        } else {
+            console.log(`       ${fileNamePrefix} is valid google analytics data`)
+        }
+        debugger;
+        //TODO
 
         //     //mapping amp default to mp defauls
         //     //https://developers.amplitude.com/docs/identify-api
@@ -214,13 +228,5 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
 function smartCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
-
-
-// main([
-//     '/Users/ak/code/toMixpanel/savedData/foo/json/302723_2021-09-17_17#689.json',
-//     '/Users/ak/code/toMixpanel/savedData/foo/json/302723_2021-09-21_16#689.json',
-//     '/Users/ak/code/toMixpanel/savedData/foo/json/302723_2021-09-26_18#689.json',
-//     '/Users/ak/code/toMixpanel/savedData/foo/json/302723_2021-09-27_23#689.json'
-// ], `./savedData/foo/`, MIXPANEL_TOKEN);
 
 export default main;
