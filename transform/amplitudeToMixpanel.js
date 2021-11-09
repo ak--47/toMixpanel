@@ -214,11 +214,4 @@ function smartCommas(x) {
 }
 
 
-// main([
-//     '/Users/ak/code/toMixpanel/savedData/foo/json/302723_2021-09-17_17#689.json',
-//     '/Users/ak/code/toMixpanel/savedData/foo/json/302723_2021-09-21_16#689.json',
-//     '/Users/ak/code/toMixpanel/savedData/foo/json/302723_2021-09-26_18#689.json',
-//     '/Users/ak/code/toMixpanel/savedData/foo/json/302723_2021-09-27_23#689.json'
-// ], `./savedData/foo/`, MIXPANEL_TOKEN);
-
 export default main;

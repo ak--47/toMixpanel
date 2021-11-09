@@ -40,7 +40,7 @@ async function main(dataFile, isEU) {
     console.log(`       parsed ${numberWithCommas(allData.length)} profiles from ${dataFile}`);
 
     //max 50 profiles per batch
-    const batches = chunkForNumOfEvents(allData, PROFILES_PER_REQUEST);
+    const batches = chunkForNumOfProfiles(allData, PROFILES_PER_REQUEST);
 
 
 
@@ -84,7 +84,7 @@ async function main(dataFile, isEU) {
         }
     }
 
-    function chunkForNumOfEvents(arrayOfProfiles, chunkSize) {
+    function chunkForNumOfProfiles(arrayOfProfiles, chunkSize) {
         return arrayOfProfiles.reduce((resultArray, item, index) => {
             const chunkIndex = Math.floor(index / chunkSize)
 

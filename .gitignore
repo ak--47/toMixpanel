@@ -1,6 +1,7 @@
 #tempFolders
 savedData/*
 !savedData/.gitkeep 
+sampleData/*
 
 #env
 .env

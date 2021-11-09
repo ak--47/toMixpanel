@@ -17,7 +17,7 @@ import googleAnalyticsETL from './connectors/googleAnalyticsETL.js'
 
 
 async function main() {
-    console.log('starting up!')
+    console.log('\nstarting up!\n')
     //figure out where config is
     let cliArgs = process.argv;
     let configFromArgs = cliArgs.filter(argument => argument.includes('.json'));
@@ -27,7 +27,6 @@ async function main() {
     } else {
         configPath = './config.json';
     }
-    console.log(`found ${configPath}`);
     const userConfig = await readFile(configPath)
     let config;
     try {
@@ -38,6 +37,7 @@ async function main() {
         console.log(JSON.stringify(JSON.parse(configExample), null, 2))
         process.exit(-1)
     }
+    console.log(`found config @ ${configPath}\n`);
 
 
     //create a root folder for everything

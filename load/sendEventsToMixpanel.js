@@ -48,19 +48,6 @@ async function main(credentials = {}, dataFile = ``, isEU) {
 
     console.log(`       parsed ${numberWithCommas(allData.length)} events from ${dataFile}`);
 
-    // //TRANSFORM
-    // for (let singleEvent of allData) {
-
-    //     //ensure each event has an $insert_id prop
-    //     if (!singleEvent.properties.$insert_id) {
-    //         let hash = md5(singleEvent);
-    //         singleEvent.properties.$insert_id = hash;
-    //     }
-
-    //     //etc...
-    // }
-
-
     //CHUNK
 
     //max 2000 events per batch

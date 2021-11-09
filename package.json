@@ -4,9 +4,10 @@
   "description": "ETL for data into Mixpanel from many sources",
   "main": "index.js",
   "scripts": {
-    "test": "npm run prune && node index.js",
+    "start": "node index.js",
     "prune": "rm -rf ./savedData/*",
-    "quickTest": "npm run prune && node ./extract/amplitude.js && node ./transform/amplitudeToMixpanel.js"
+    "amplitude": "npm run prune && node --inspect ./index.js ./configAMP.json",
+    "ga360" : "npm run prune && node --inspect ./index.js ./configGA360.json"
   },
   "type": "module",
   "keywords": [],
