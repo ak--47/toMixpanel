@@ -51,56 +51,127 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
         } else {
             console.log(`       ${fileNamePrefix} is valid google analytics data`)
         }
+
+        //USER PROFILES
+        writePath = path.resolve(`${dataPath}/profiles`);
+
+        const mpUserProfiles = json.map(session => {
+            let profile = {
+                "$token": mpToken,
+                "$distinct_id": ``,
+                "$ip": 0,
+                "$set": {}
+            }
+            //uuid
+            let uuid = session.userId || session.fullVisitorId || session.visitorId || session.client_id || session.visitId || `not found!`
+            profile.$distinct_id = uuid;
+
+            let defaultProps = mapDefaults(session)
+
+            profile.$set = { ...profile.$set, ...defaultProps };
+
+            if (profile.$set.$latitude && profile.$set.$longitude) {
+                profile.$latitude = profile.$set.$latitude;
+                profile.$longitude = profile.$set.$longitude;
+            }
+
+            return profile;
+
+        });
+
+
+
+        totalProfileEntries += mpUserProfiles.length;
+        console.log(`       transforming user profiles... (${smartCommas(mpUserProfiles.length)} profiles)`);
+
+        //write file
+        let profileFileName = path.resolve(`${writePath}/${fileNamePrefix.split('.')[0]}-profiles.json`)
+        await writeFilePromisified(profileFileName, JSON.stringify(mpUserProfiles, null, 2));
+        transformedPaths.profiles.push(profileFileName);
+
+
+        //EVENTS
+        writePath = path.resolve(`${dataPath}/events`);
+        let mpEvents = [];
+
+        //loop through sessions
+        for (const session of json) {
+            //each session gets a 'session start' and 'session end' event
+            let uuid = session.userId || session.fullVisitorId || session.visitorId || session.client_id || session.visitId || `not found!`;
+            let startTime = parseInt(session.visitStartTime);
+            let endTime = parseInt(session.visitStartTime);
+            let defaultProps = mapDefaults(session);
+            let sessionSummary = session.totals;
+
+            let eventStartTemplate = {
+                "event": "session start",
+                "properties": {
+                    "distinct_id": uuid,
+                    "time": startTime,
+                    "summary": sessionSummary,
+                    ...defaultProps
+                }
+            }
+            mpEvents.push(eventStartTemplate);
+
+            for (const hit of session.hits) {
+                let eventHitTemplate = {
+                    "event": ``,
+                    "properties": {
+                        "distinct_id": uuid,
+                        ...defaultProps
+                    }
+                }
+
+                //time calc... hit time is in ms
+                let eventTime;
+                if (parseInt(hit.time) === 0) {
+                    eventTime = startTime;
+
+                } else {
+                    eventTime = startTime + parseInt(hit.time)
+                }            
+                //update end time
+                endTime = eventTime;
+                eventHitTemplate.properties.time = eventTime;
+
+                //figure out event name!
+                //TODO MAKE THIS BETTER FOR 'EVENT' types
+                let eventName = hit.type
+                eventHitTemplate.event = eventName;
+
+                //TODO MAP OUT CUSTOM PROPS
+                
+                mpEvents.push(eventHitTemplate);
+
+
+            }
+
+            let eventEndTemplate = {
+                "event": "session end",
+                "properties": {
+                    "distinct_id": uuid,
+                    "time": endTime,
+                    "summary": sessionSummary,
+                    ...defaultProps
+                }
+            }
+            mpEvents.push(eventEndTemplate);
+        }
+
         debugger;
-        //TODO
 
-        //     //mapping amp default to mp defauls
-        //     //https://developers.amplitude.com/docs/identify-api
-        //     //https://help.mixpanel.com/hc/en-us/articles/115004613766-Default-Properties-Collected-by-Mixpanel
-        //     let ampMixPairs = [
-        //         ["app_version", "$app_version_string"],
-        //         ["os_name", "$os"],
-        //         ["os_name", "$browser"],
-        //         ["os_version", "$os_version"],
-        //         ["device_brand", "$brand"],
-        //         ["device_manufacturer", "$manufacturer"],
-        //         ["device_model", "$model"],
-        //         ["region", "$region"],
-        //         ["city", "$city"]
-        //     ]
+        //write file
+        let eventsFileName = path.resolve(`${writePath}/${fileNamePrefix.split('.')[0]}-events.json`)
+        await writeFilePromisified(eventsFileName, JSON.stringify(mpEvents, null, 2));
+        transformedPaths.events.push(eventsFileName);
 
-        //     //transform user props
-        //     writePath = path.resolve(`${dataPath}/profiles`);
-        //     let mpUserProfiles = json.filter((amplitudeEvent) => {
-        //             return Object.keys(amplitudeEvent.user_properties).length !== 0;
-        //         })
-        //         .map((amplitudeEvent) => {
-        //             let profile = {
-        //                 "$token": mpToken,
-        //                 "$distinct_id": amplitudeEvent.user_id,
-        //                 "$ip": amplitudeEvent.ip_address,
-        //                 "$set": amplitudeEvent.user_properties
-        //             }
-
-        //             //include defaults, if they exist
-        //             for (let ampMixPair of ampMixPairs) {
-        //                 if (amplitudeEvent[ampMixPair[0]]) {
-        //                     profile.$set[ampMixPair[1]] = amplitudeEvent[ampMixPair[0]]
-        //                 }
-        //             }
-
-        //             return profile;
-
-        //         });
+        //MERGE!
+        //create merge tables
+        let mergeTable = [];
+        writePath = path.resolve(`${dataPath}/mergeTables`);
 
 
-        //     totalProfileEntries += mpUserProfiles.length;
-        //     console.log(`       transforming user profiles... (${smartCommas(mpUserProfiles.length)} profiles)`);
-
-        //     //write file
-        //     let profileFileName = path.resolve(`${writePath}/${fileNamePrefix.split('.')[0]}-profiles.json`)
-        //     await writeFilePromisified(profileFileName, JSON.stringify(mpUserProfiles, null, 2));
-        //     transformedPaths.profiles.push(profileFileName);
 
         //     //transform events
         //     writePath = path.resolve(`${dataPath}/events`);
@@ -223,6 +294,94 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
         // console.log(`transfomed ${smartCommas(totalProfileEntries)} profiles operations, ${smartCommas(totalEventsTransformed)} events, and ${smartCommas(totalMergeTables)} merge entries\n`)
         // return transformedPaths
     }
+}
+
+//UTILITY METHODS
+
+function getSessionSummary(session) {
+    let summary = {};
+
+}
+
+function mapDefaults(session) {
+    let props = {};
+    //map default props
+    //all props on the device key of GA session
+    let GAmixDevicePairs = [
+        ["browser", "$browser"],
+        ["browserSize", "screen size"],
+        ["browserVersion", "$browser_version"],
+        ["deviceCategory", "device type"],
+        ["mobileDeviceInfo", "$device"],
+        ["mobileDeviceModel", "$model"],
+        ["operatingSystem", "$os"],
+        ["operatingSystemVersion", "$os_version"],
+        ["mobileDeviceBranding", "$brand"],
+        ["language", "language"],
+        ["screenResolution", "screen size"]
+    ];
+
+    let GAmixLocationPairs = [
+        ["continent", "continent"],
+        ["subContinent", "sub continent"],
+        ["country", "mp_country_code"],
+        ["region", "$region"],
+        ["metro", "dma"],
+        ["city", "$city"],
+        ["latitude", "$latitude"],
+        ["longitude", "$longitude"]
+    ]
+
+    let GAmixAttributionPairs = [
+        ["adContent", "utm_content"],
+        ["adWordsClickInfo", "ad words info"],
+        ["campaign", "utm_campaign"],
+        ["campaignCode", "utm_term"],
+        ["isTrueDirect", "is true direct?"],
+        ["keyword", "utm_keyword"],
+        ["medium", "utm_medium"],
+        ["referralPath", "$referrer"],
+        ["source", "utm_source"]
+    ]
+
+
+    //include defaults, if they exist:
+    //DEVICE INFO:
+    for (let GAmixDevicePair of GAmixDevicePairs) {
+        if (session.device[GAmixDevicePair[0]]) {
+            props[GAmixDevicePair[1]] = session.device[GAmixDevicePair[0]]
+        }
+    }
+
+    //LOCATION INFO:
+    for (let GAmixLocationPair of GAmixLocationPairs) {
+        if (session.geoNetwork[GAmixLocationPair[0]]) {
+            props[GAmixLocationPair[1]] = session.geoNetwork[GAmixLocationPair[0]]
+        }
+    }
+
+    //ATTIRBUTION INFO:        
+    for (let GAmixAttributionPair of GAmixAttributionPairs) {
+        if (session.trafficSource[GAmixAttributionPair[0]]) {
+            props[GAmixAttributionPair[1]] = session.trafficSource[GAmixAttributionPair[0]]
+        }
+    }
+    try {
+        //explicit check for long/latitude
+        if (session.geoNetwork.latitude && session.geoNetwork.longitude) {
+            props.$latitude = session.geoNetwork.latitude
+            props.$longitude = session.geoNetwork.longitude
+        }
+    } catch (e) {}
+    try {
+        if (session.channelGrouping) {
+            props.utm_channel = session.channelGrouping;
+        }
+    } catch (e) {
+
+    }
+
+    return props;
 }
 
 function smartCommas(x) {
