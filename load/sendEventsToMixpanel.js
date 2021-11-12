@@ -137,8 +137,9 @@ async function main(credentials = {}, dataFile = ``, isEU) {
         try {
             let req = await fetch(url, options);
             let res = await req.json();
+            // console.log(`${JSON.stringify(res, null, 2)}\n`)
             return res;
-            //console.log(`${res}\n`)
+            
         } catch (e) {
             console.log(`   problem with request:\n${e}`)
         }

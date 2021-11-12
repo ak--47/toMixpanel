@@ -11,7 +11,7 @@ const gaSchema = JSON.parse(readFileSync(path.resolve('./transform/gaSchema.json
 const readFilePromisified = promisify(readFile);
 const writeFilePromisified = promisify(writeFile);
 
-async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
+async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken, makeTimeCurrent = false) {
 
     try {
         mkdirSync(path.resolve(`${directory}/transformed`))
@@ -79,10 +79,8 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
 
         });
 
-
-
         totalProfileEntries += mpUserProfiles.length;
-        console.log(`       transforming user profiles... (${smartCommas(mpUserProfiles.length)} profiles)`);
+        console.log(`           transforming user profiles... (${smartCommas(mpUserProfiles.length)} profiles)`);
 
         //write file
         let profileFileName = path.resolve(`${writePath}/${fileNamePrefix.split('.')[0]}-profiles.json`)
@@ -104,7 +102,7 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
             let sessionSummary = session.totals;
 
             let eventStartTemplate = {
-                "event": "session start",
+                "event": "session begins",
                 "properties": {
                     "distinct_id": uuid,
                     "time": startTime,
@@ -148,16 +146,54 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
                 }
                 eventHitTemplate.event = eventName;
 
-                //TODO MAP OUT CUSTOM PROPS
-                eventHitTemplate.raw = hit
+                //inline to help with adding simple props
+                const addSimpleProps = (key, alias = null) => {
+                    if (hit[key]) {
+                        if (alias) {
+                            eventHitTemplate.properties[alias] = hit[key]
+                        } else {
+                            eventHitTemplate.properties[key] = hit[key]
+                        }
+                    }
+                }
+                addSimpleProps('referrer', '$referrer');
+                addSimpleProps('isEntrance');
+                addSimpleProps('isExit');
+                addSimpleProps('isInteraction');
 
+
+
+                //inliner to help with adding nested props
+                const addNestedProps = (props, alias = null) => {
+                    if (Object.keys(props).length > 0) {
+                        if (alias) {
+                            eventHitTemplate.properties[alias] = props;
+                        } else {
+                            eventHitTemplate.properties = { ...eventHitTemplate.properties, ...props }
+                        }
+                    }
+                }
+                //test for various nest props
+                hit.experiment ? addNestedProps(hit.experiment) : false;
+                hit.product ? addNestedProps(hit.product, "products") : false;
+                hit.transaction ? addNestedProps(hit.transaction) : false;
+                hit.social ? addNestedProps(hit.social) : false;
+                hit.page ? addNestedProps(hit.page) : false;
+                hit.promotion ? addNestedProps(hit.promotion, "promotions") : false;
+                hit.item ? addNestedProps(hit.item) : false;
+                hit.appInfo ? addNestedProps(hit.appInfo) : false;
+                hit.eventInfo ? addNestedProps(hit.eventInfo) : false;
+                hit.customVariables ? addNestedProps(hit.customVariables) : false;
+                hit.customDimensions ? addNestedProps(hit.customDimensions) : false;
+                hit.customMetrics ? addNestedProps(hit.customMetrics) : false;
+               
                 mpEvents.push(eventHitTemplate);
 
 
             }
 
             let eventEndTemplate = {
-                "event": "session end",
+                "event": "session ended",
                 "properties": {
                     "distinct_id": uuid,
                     "time": endTime,
@@ -168,14 +204,32 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
             mpEvents.push(eventEndTemplate);
         }
 
-        debugger;
+        //set insert_id on every event
+        for (const event of mpEvents) {             
+            let hash = md5(JSON.stringify(event));
+            event.properties.$insert_id = hash;
+        }
+  
+
+        //THIS IS JUST TO SEE SAMPLE DATA DO NOT USE
+        if (makeTimeCurrent) {
+            let oldest = dayjs.unix(mpEvents.slice(mpEvents.length - 1)[0].properties.time)
+            let now = dayjs();
+            let timeToAdd = now.diff(oldest, "seconds") - 172800;
+            mpEvents.forEach((ev) => {
+                ev.properties.time += timeToAdd;
+            })
+        }
+
+        totalEventsTransformed += mpEvents.length
+        console.log(`           transforming events... (${smartCommas(mpEvents.length)} events)`);
 
         //write file
         let eventsFileName = path.resolve(`${writePath}/${fileNamePrefix.split('.')[0]}-events.json`)
         await writeFilePromisified(eventsFileName, JSON.stringify(mpEvents, null, 2));
         transformedPaths.events.push(eventsFileName);
 
-        //MERGE!
+        //TODO MERGE!
         //create merge tables
         let mergeTable = [];
         writePath = path.resolve(`${dataPath}/mergeTables`);
@@ -301,7 +355,7 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
 
         // //console.log(transformedPaths)
         // console.log(`transfomed ${smartCommas(totalProfileEntries)} profiles operations, ${smartCommas(totalEventsTransformed)} events, and ${smartCommas(totalMergeTables)} merge entries\n`)
-        // return transformedPaths
+        return transformedPaths
     }
 }
 
@@ -384,7 +438,7 @@ function mapDefaults(session) {
     } catch (e) {}
     try {
         if (session.channelGrouping) {
-            props.utm_channel = session.channelGrouping;
+            props["UTM Channel"] = session.channelGrouping;
         }
     } catch (e) {
 
