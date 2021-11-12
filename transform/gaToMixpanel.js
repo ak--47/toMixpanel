@@ -130,18 +130,27 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
 
                 } else {
                     eventTime = startTime + parseInt(hit.time)
-                }            
+                }
                 //update end time
                 endTime = eventTime;
                 eventHitTemplate.properties.time = eventTime;
 
-                //figure out event name!
-                //TODO MAKE THIS BETTER FOR 'EVENT' types
-                let eventName = hit.type
+                //figure out event name!                
+                let eventName;
+                try {
+                    if (hit.eventInfo) {
+                        eventName = hit.eventInfo.eventAction;
+                    } else {
+                        throw Error();
+                    }
+                } catch (e) {
+                    eventName = hit.type;
+                }
                 eventHitTemplate.event = eventName;
 
                 //TODO MAP OUT CUSTOM PROPS
-                
+                eventHitTemplate.raw = hit
+
                 mpEvents.push(eventHitTemplate);
 
 
