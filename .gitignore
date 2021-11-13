@@ -1,10 +1,12 @@
 #tempFolders
 savedData/*
 !savedData/.gitkeep 
+sampleData/*
 
 #env
 .env
-config.json
+configAMP.json
+configGA360.json
 
 
 #osx remnants

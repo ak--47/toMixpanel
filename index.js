@@ -1,7 +1,7 @@
+#!/usr/bin/env node
 // toMixpanel is your one-stop-shop ETL to get data from various sources... into Mixpanel!
 // by AK
 // ak@mixpanel.com
-
 
 //deps
 import { statSync, mkdirSync, existsSync, readdir } from 'fs';
@@ -10,24 +10,23 @@ import { promisify } from 'util'
 import * as path from 'path';
 import dayjs from 'dayjs';
 
-
 //connectors
 import amplitudeETL from './connectors/amplitudeETL.js'
+import googleAnalyticsETL from './connectors/googleAnalyticsETL.js'
+
+
 
 async function main() {
-    console.log('starting up!')
+    console.log('\nstarting up!\n')
     //figure out where config is
     let cliArgs = process.argv;
     let configFromArgs = cliArgs.filter(argument => argument.includes('.json'));
     let configPath;
     if (configFromArgs.length > 0) {
         configPath = configFromArgs[0];
-    }
-
-    else {
+    } else {
         configPath = './config.json';
     }
-    console.log(configPath)
     const userConfig = await readFile(configPath)
     let config;
     try {
@@ -38,6 +37,7 @@ async function main() {
         console.log(JSON.stringify(JSON.parse(configExample), null, 2))
         process.exit(-1)
     }
+    console.log(`found config @ ${configPath}\n`);
 
 
     //create a root folder for everything
@@ -52,7 +52,9 @@ async function main() {
             console.log(`lets migrate data from ${config.source.name} to Mixpanel!\n\n`);
             amplitudeETL(config, directoryName);
             break;
-        case 'foo':
+        case 'googleanalytics':
+            console.log(`lets migrate data from ${config.source.name} to Mixpanel!\n\n`);
+            googleAnalyticsETL(config, directoryName);
             // code block
             break;
         default:
@@ -63,4 +65,3 @@ async function main() {
 }
 
 main()
-
