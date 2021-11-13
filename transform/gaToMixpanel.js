@@ -96,8 +96,9 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken, ma
         for (const session of json) {
             //each session gets a 'session start' and 'session end' event
             let uuid = session.userId || session.fullVisitorId || session.visitorId || session.client_id || session.visitId || `not found!`;
-            let startTime = parseInt(session.visitStartTime);
-            let endTime = parseInt(session.visitStartTime);
+            //session time is in seconds
+            let startTime = parseInt(session.visitStartTime) * 1000;
+            let endTime = parseInt(session.visitStartTime) * 1000;
             let defaultProps = mapDefaults(session);
             let sessionSummary = session.totals;
 
@@ -124,16 +125,17 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken, ma
                 //time calc... hit time is in ms
                 let eventTime;
                 if (parseInt(hit.time) === 0) {
-                    eventTime = startTime;
+                    eventTime = startTime + 1000;
 
                 } else {
                     eventTime = startTime + parseInt(hit.time)
                 }
+                eventHitTemplate.properties.time = eventTime;
                 //update end time
                 endTime = eventTime;
-                eventHitTemplate.properties.time = eventTime;
 
-                //figure out event name!                
+                //figure out event name!
+                //todo SOME hits are getting the 'EVENT' name                
                 let eventName;
                 try {
                     if (hit.eventInfo) {
@@ -146,7 +148,7 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken, ma
                 }
                 eventHitTemplate.event = eventName;
 
-                //inline to help with adding simple props
+                //inlineer to help with adding simple props
                 const addSimpleProps = (key, alias = null) => {
                     if (hit[key]) {
                         if (alias) {
@@ -160,8 +162,6 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken, ma
                 addSimpleProps('isEntrance');
                 addSimpleProps('isExit');
                 addSimpleProps('isInteraction');
-
-
 
                 //inliner to help with adding nested props
                 const addNestedProps = (props, alias = null) => {
@@ -186,11 +186,17 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken, ma
                 hit.customVariables ? addNestedProps(hit.customVariables) : false;
                 hit.customDimensions ? addNestedProps(hit.customDimensions) : false;
                 hit.customMetrics ? addNestedProps(hit.customMetrics) : false;
-               
+
+                //for debugging
+                // eventHitTemplate.raw = hit
+
                 mpEvents.push(eventHitTemplate);
 
 
             }
+
+            //bump end time one second to ensure sequencing
+            endTime += 1000
 
             let eventEndTemplate = {
                 "event": "session ended",
@@ -205,22 +211,21 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken, ma
         }
 
         //set insert_id on every event
-        for (const event of mpEvents) {             
+        for (const event of mpEvents) {
             let hash = md5(JSON.stringify(event));
             event.properties.$insert_id = hash;
         }
-  
+
 
         //THIS IS JUST TO SEE SAMPLE DATA DO NOT USE
         if (makeTimeCurrent) {
-            let oldest = dayjs.unix(mpEvents.slice(mpEvents.length - 1)[0].properties.time)
+            let oldest = dayjs(mpEvents.slice(mpEvents.length - 1)[0].properties.time)
             let now = dayjs();
-            let timeToAdd = now.diff(oldest, "seconds") - 172800;
+            let timeToAdd = now.diff(oldest, "ms") - (345600 * 1000);
             mpEvents.forEach((ev) => {
                 ev.properties.time += timeToAdd;
             })
         }
-
         totalEventsTransformed += mpEvents.length
         console.log(`           transforming events... (${smartCommas(mpEvents.length)} events)`);
 
@@ -229,67 +234,22 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken, ma
         await writeFilePromisified(eventsFileName, JSON.stringify(mpEvents, null, 2));
         transformedPaths.events.push(eventsFileName);
 
-        //TODO MERGE!
+        
         //create merge tables
         let mergeTable = [];
         writePath = path.resolve(`${dataPath}/mergeTables`);
+        let allSessionsWithIdentifiers = json.map(session => {
+            return {
+                userId: session.userId,
+                fullVisitorId: session.fullVisitorId,
+                visitorId: session.visitorId,
+                clientId: session.client_id,
+                visitId: session.visitId
+            }
+        });
+        //TODO MERGE THESE TOGETHER SOMEHOW!
 
 
-
-        //     //transform events
-        //     writePath = path.resolve(`${dataPath}/events`);
-        //     let mpEvents = json.map((amplitudeEvent) => {
-        //         let mixpanelEvent = {
-        //             "event": amplitudeEvent.event_type,
-        //             "properties": {
-        //                 //prefer user_id, then device_id, then amplitude_id
-        //                 "distinct_id": amplitudeEvent.user_id || amplitudeEvent.device_id || amplitudeEvent.amplitude_id.toString(),
-        //                 "$device_id": amplitudeEvent.device_id,
-        //                 "time": dayjs(amplitudeEvent.event_time).valueOf(),
-        //                 "ip": amplitudeEvent.ip_address,
-        //                 "$city": amplitudeEvent.city,
-        //                 "$region": amplitudeEvent.region,
-        //                 "mp_country_code": amplitudeEvent.country
-        //             }
-
-        //         }
-
-        //         //get all custom props
-        //         mixpanelEvent.properties = { ...amplitudeEvent.event_properties, ...mixpanelEvent.properties }
-
-        //         //remove what we don't need
-        //         delete amplitudeEvent.user_properties;
-        //         delete amplitudeEvent.group_properties;
-        //         delete amplitudeEvent.global_user_properties;
-        //         delete amplitudeEvent.event_properties;
-        //         delete amplitudeEvent.groups;
-        //         delete amplitudeEvent.data;
-
-        //         //fill in defaults & delete from amp data (if found)
-        //         for (let ampMixPair of ampMixPairs) {
-        //             if (amplitudeEvent[ampMixPair[0]]) {
-        //                 mixpanelEvent.properties[ampMixPair[1]] = amplitudeEvent[ampMixPair[0]];
-        //                 delete amplitudeEvent[ampMixPair[0]];
-        //             }
-        //         }
-
-        //         //gather everything else
-        //         mixpanelEvent.properties = { ...amplitudeEvent, ...mixpanelEvent.properties }
-
-        //         //set insert_id
-        //         let hash = md5(JSON.stringify(mixpanelEvent));
-        //         mixpanelEvent.properties.$insert_id = hash;
-
-        //         return mixpanelEvent
-        //     });
-
-        //     totalEventsTransformed += mpEvents.length
-        //     console.log(`       transforming events... (${smartCommas(mpEvents.length)} events)`);
-
-        //     //write file
-        //     let eventsFileName = path.resolve(`${writePath}/${fileNamePrefix.split('.')[0]}-events.json`)
-        //     await writeFilePromisified(eventsFileName, JSON.stringify(mpEvents, null, 2));
-        //     transformedPaths.events.push(eventsFileName);
 
         //     //create merge tables
         //     let mergeTable = [];

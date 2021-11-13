@@ -12,7 +12,7 @@ async function googleAnalyticsETL(config, directoryName) {
 
     console.log('\nTRANSFORM!\n')
     //NOTE TAKE OFF THE LAST PARAM SO THE DATES DON'T BUMP!
-    let transform = await gaTransform(extractedFiles, `./savedData/${directoryName}`, config.destination.token, true);
+    let transform = await gaTransform(extractedFiles, `./savedData/${directoryName}`, config.destination.token);
 
 
     console.log('\nLOAD!\n')
@@ -23,7 +23,7 @@ async function googleAnalyticsETL(config, directoryName) {
         password: config.destination.service_account_pass,
         project_id: config.destination.project_id
     }
-    let totalEventsImported = -1;
+    let totalEventsImported = 0;
     //events
     for await (let eventDataFile of eventPaths) {
         let eventsImported = await sendEventsToMixpanel(mixpanelCreds, eventDataFile, config.destination.options['is EU?']);
@@ -35,7 +35,7 @@ async function googleAnalyticsETL(config, directoryName) {
     console.log('LOAD!')
     console.log('   identity resolution:\n')
     //mergeTables
-    let totalMergeTables = -1
+    let totalMergeTables = 0
     for await (let mergeTable of mergeTablePaths) {
         let mergeTablesImported = await sendEventsToMixpanel(mixpanelCreds, mergeTable, config.destination.options['is EU?']);
         totalMergeTables += mergeTablesImported

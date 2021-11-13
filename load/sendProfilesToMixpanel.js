@@ -49,9 +49,14 @@ async function main(dataFile, isEU) {
     let numRecordsImported = 0;
     for (let profileBatch of batches) {
         let result = await sendDataToMixpanel(profileBatch);
+
+        // //some batches fail, for some reason?!?
+        // if (result.status === 0) {
+        //     debugger;
+        // }
         // console.log(`   done ✅`)
         // console.log(`   mixpanel response:`)
-        // console.log(result);
+        console.log(`           ${JSON.stringify(result)}`);
         //console.log('\n')
         numRecordsImported += profileBatch.length;
     }

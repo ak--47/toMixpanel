@@ -1,0 +1,37 @@
+{
+    "source": {
+        "name": "googleAnalytics",
+        "params": {            
+            "project_id": "{{ GCP PROJECT ID }}",
+            "bucket_name": "{{ GCP BUCKET NAME }}",
+            "keyFile" : {
+                // note: you get these values when you create a service account
+                // https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating
+                // ensure this service account can access your storage bucket
+                "type": "service_account",
+                "project_id": "{{ GCP PROJECT ID }}",
+                "private_key_id": "{{ SERVICE ACCOUNT KEY ID }}",
+                "private_key": "{{ SERVICE ACCOUNT PRIV KEY }}",
+                "client_email": "{{ SERVICE ACCOUNT EMAIL }}",
+                "client_id": "{{ SERVICE ACCOUNT ID }}",
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                "client_x509_cert_url": " {{ SERVICE ACCOUNT X509 }}"
+            }
+        },
+        "options" : {
+            "save_local_copy": true           
+        }
+    },
+    "destination": {
+        "name": "mixpanel",
+        "project_id": "{{ project id }}", 
+        "token": "{{ project token }}",
+        "service_account_user": "{{ mp service account }}",
+        "service_account_pass": "{{ mp service secret }}",
+        "options": {
+            "is EU?" : false
+        }
+    }
+}
