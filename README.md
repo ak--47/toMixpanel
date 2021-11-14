@@ -76,8 +76,10 @@ you can find more configuration examples in the repo.
 
 ## supported sources
 - amplitude
+
 required params: `api_key`, `api_secret`, `start_date`, `end_date`, `is EU?`
-- ga360*
+- ga360\*
+
 required params: `project_id`, `bucket_name`, `private_key_id`, `private_key`, `client_email`, `client_id`, `auth_uri`, `token_uri`, `auth_provider_x590_cert_url`, `client_x509_cert_url` 
 
-*note: google analytics does not have public `/export` APIs, so you'll need to [export your data to bigQuery](https://support.google.com/analytics/answer/3437618?hl=en) *first*, and then [export your bigQuery tables to google cloud storage](https://support.google.com/analytics/answer/3416092?hl=en#zippy=,in-this-article) **as JSON**. You can then [create a service account](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating) in google cloud storage which can access the bucket; the above-mentioned values are given to you when you create a service account
+\*note: google analytics does not have public `/export` APIs, so you'll need to [export your data to bigQuery](https://support.google.com/analytics/answer/3437618?hl=en) *first*, and then [export your bigQuery tables to google cloud storage](https://support.google.com/analytics/answer/3416092?hl=en#zippy=,in-this-article) **as JSON**. You can then [create a service account](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating) in google cloud storage which can access the bucket; the above-mentioned values are given to you when you create a service account

@@ -72,16 +72,20 @@ async function main(dataFile, isEU) {
         let options = {
             method: 'POST',
             headers: {
-                'Content-Type': 'text/plain'
+                'Content-Type': 'application/json'
 
             },
-            body: `data=${JSON.stringify(batch)}`
+            body: JSON.stringify(batch)
         }
 
         try {
             let req = await fetch(url, options);
             let res = await req.json();
             // console.log(`${JSON.stringify(res)}\n`)
+            //some batches fail, for some reason?!?
+            if (res.status === 0) {
+                debugger;
+            }
             return res;
 
         } catch (e) {
