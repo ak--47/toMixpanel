@@ -2,6 +2,7 @@
 savedData/*
 !savedData/.gitkeep 
 sampleData/*
+customerData/*
 
 #env
 .env

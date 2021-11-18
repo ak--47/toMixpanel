@@ -12,7 +12,8 @@ async function googleAnalyticsETL(config, directoryName) {
 
     console.log('\nTRANSFORM!\n')
     //NOTE TAKE OFF THE LAST PARAM SO THE DATES DON'T BUMP!
-    let transform = await gaTransform(extractedFiles, `./savedData/${directoryName}`, config.destination.token);
+    let moveToPresent = config.source.options.move_data_to_present || false;
+    let transform = await gaTransform(extractedFiles, `./savedData/${directoryName}`, config.destination.token, moveToPresent);
 
 
     console.log('\nLOAD!\n')
