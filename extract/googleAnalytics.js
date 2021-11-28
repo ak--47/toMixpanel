@@ -38,9 +38,9 @@ export default async function main(projectId, bucketName, keyFileData, destPath)
 
     //consume bucket
     console.log(`   downloading files`)
-    const fileNames = files.map(f => f.name);
+    const fileNames = files.map(f => f.name)
     downloadFiles: for (const fileName of fileNames) {
-        const pathToFile = path.resolve(`${directory}/downloaded/${fileName}`);
+        const pathToFile = path.resolve(`${directory}/downloaded/${fileName.split('/').join('--')}`);
         const options = {
             destination: pathToFile
         };
