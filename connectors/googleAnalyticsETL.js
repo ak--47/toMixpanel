@@ -6,7 +6,7 @@ import { mapDefaults, mapUserProfiles, mapEvents } from '../transform/gaToMixpan
 import sendEventsToMixpanel from '../load/sendEventsToMixpanel.js'
 import sendProfilesToMixpanel from '../load/sendProfilesToMixpanel.js'
 import { readdir, readFile } from 'fs/promises'
-import {createReadStream, mkdirSync } from 'fs'
+import { createReadStream, mkdirSync } from 'fs'
 import { isGzip } from '../extract/googleAnalytics.js'
 import { execSync } from 'child_process'
 
@@ -18,7 +18,15 @@ async function googleAnalyticsETL(config, directoryName) {
 
     //FOR BIG DATA... GO LINE BY LINE...
     if (options.path_to_data) {
+        let mixpanelCreds = {
+            username: config.destination.service_account_user,
+            password: config.destination.service_account_pass,
+            project_id: config.destination.project_id
+        }
+        let totalEventsImported = 0;
+        let totalProfilesImported = 0;
         console.log(`checking data at ${options.path_to_data}`);
+
         let listOfFiles = (await readdir(path.resolve(options.path_to_data))).map(file => path.resolve(`${options.path_to_data}/${file}`));
         for await (let filePath of listOfFiles) {
             //try to read the file
@@ -29,7 +37,7 @@ async function googleAnalyticsETL(config, directoryName) {
                     let tempPath = `${path.dirname(filePath)}/tempFiles`;
                     execSync(`rm -rf ${tempPath}`);
                     mkdirSync(path.resolve(tempPath));
-                    execSync(`gunzip -c ${filePath} > ${tempPath}/temp`);                   
+                    execSync(`gunzip -c ${filePath} > ${tempPath}/temp`);
                     const instream = createReadStream(`${tempPath}/temp`);
                     const rl = readline.createInterface({
                         input: instream,
@@ -37,21 +45,27 @@ async function googleAnalyticsETL(config, directoryName) {
                     });
                     let events = [];
                     let profiles = [];
-                    
+
+
                     readEachLine: for await (const line of rl) {
                         let session = JSON.parse(line);
-                        
+
                         //PROFILES
-                        mapUserProfiles([session], config.destination.token).forEach(profile => profiles.push(profile));                        
-                        
+                        mapUserProfiles([session], config.destination.token).forEach(profile => profiles.push(profile));
+
                         //EVENTS
                         mapEvents([session]).forEach(event => events.push(event));
 
                         //IF EVENTS > 1k ... flush and empty array
                         if (events.length > 1000) {
-                            console.log(`       flushing ${smartCommas(events.length)} events and ${smartCommas(profiles.length)} profiles`)
+                            console.log(`           flushing!`)
 
+                            await sendEventsToMixpanel(mixpanelCreds, events, config.destination.options['is EU?'], true);
+                            await sendProfilesToMixpanel(profiles, config.destination.options['is EU?'], true);
+                            
                             //empty for gc
+                            totalEventsImported+= events.length
+                            totalProfilesImported += profiles.length
                             events.length = 0;
                             profiles.length = 0;
                         }
@@ -60,18 +74,14 @@ async function googleAnalyticsETL(config, directoryName) {
 
                 } else {
                     //todo
-                    
+
                 }
             } catch (e) {
                 debugger;
             }
-            //JSON
-
-            //TRANSFORM
-
-
-            //SEND
         }
+        console.log(`finished ${smartCommas(totalEventsImported)} events + ${smartCommas(totalProfilesImported)} profiles`);
+        process.exit(1)
 
 
     } else {

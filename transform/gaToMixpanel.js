@@ -241,13 +241,18 @@ export function mapEvents(json, makeTimeCurrent = false) {
             let eventName;
             try {
                 if (hit.eventInfo) {
-                    eventName = hit.eventInfo.eventAction;
+                    eventName = hit.eventInfo.eventAction || hit.eventInfo.eventCategory;
                 } else {
-                    throw Error();
+                    throw new Error();
                 }
             } catch (e) {
                 eventName = hit.type;
             }
+
+            if (!eventName) {
+                debugger;
+            }
+
             eventHitTemplate.event = eventName;
 
             //inlineer to help with adding simple props
@@ -267,6 +272,7 @@ export function mapEvents(json, makeTimeCurrent = false) {
 
             //inliner to help with adding nested props
             const addNestedProps = (props, alias = null) => {
+                
                 if (Object.keys(props).length > 0) {
                     if (alias) {
                         eventHitTemplate.properties[alias] = props;

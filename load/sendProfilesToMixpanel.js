@@ -12,33 +12,38 @@ const ENDPOINT_URL_EU = `https://api-eu.mixpanel.com/engage`
 const PROFILES_PER_REQUEST = 50
 
 
-async function main(dataFile, isEU) {
+async function main(dataFile, isEU, isAlreadyABatch = false) {
     let ENDPOINT_URL = isEU ? ENDPOINT_URL_EU : ENDPOINT_URL_US;
-    //LOAD data files
-    let file = await readFilePromisified(dataFile).catch((e) => {
-        console.error(`failed to load ${dataFile}... does it exist?\n`);
-        process.exit(1);
-    });
-
-
-    //UNIFY
-    //if it's already JSON, just use that
     let allData;
-    try {
-        allData = JSON.parse(file)
-    } catch (e) {
-        //it's probably NDJSON, so iterate over each line
+
+    if (isAlreadyABatch) {
+        allData = dataFile
+    } else {
+        //LOAD data files
+        let file = await readFilePromisified(dataFile).catch((e) => {
+            console.error(`failed to load ${dataFile}... does it exist?\n`);
+            process.exit(1);
+        });
+
+
+        //UNIFY
+        //if it's already JSON, just use that
+
         try {
-            allData = file.split('\n').map(line => JSON.parse(line));
+            allData = JSON.parse(file)
         } catch (e) {
-            //if we don't have JSON or NDJSON... fail...
-            console.log('failed to parse data... only valid JSON or NDJSON is supported by this script')
-            console.log(e)
+            //it's probably NDJSON, so iterate over each line
+            try {
+                allData = file.split('\n').map(line => JSON.parse(line));
+            } catch (e) {
+                //if we don't have JSON or NDJSON... fail...
+                console.log('failed to parse data... only valid JSON or NDJSON is supported by this script')
+                console.log(e)
+            }
         }
+
+        console.log(`       parsed ${numberWithCommas(allData.length)} profiles from ${dataFile}`);
     }
-
-    console.log(`       parsed ${numberWithCommas(allData.length)} profiles from ${dataFile}`);
-
     //max 50 profiles per batch
     const batches = chunkForNumOfProfiles(allData, PROFILES_PER_REQUEST);
 
