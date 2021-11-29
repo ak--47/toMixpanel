@@ -84,7 +84,7 @@ async function main(dataFile, isEU) {
             // console.log(`${JSON.stringify(res)}\n`)
             //some batches fail, for some reason?!?
             if (res.status === 0) {
-                debugger;
+                //debugger;
             }
             return res;
 

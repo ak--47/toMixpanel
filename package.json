@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "prune": "rm -rf ./savedData/*",
-    "amplitude": "npm run prune && node --inspect ./index.js ./configAMP.json",
-    "ga360": "npm run prune && node --inspect ./index.js ./configGA360.json"
+    "amplitude": "npm run prune && node --inspect --max_old_space_size=8192 ./index.js ./configAMP.json",
+    "ga360": "npm run prune && node --inspect --max_old_space_size=8192 ./index.js ./configGA360.json"
   },
   "type": "module",
   "keywords": [],

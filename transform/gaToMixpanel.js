@@ -54,35 +54,9 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken, ma
 
         //USER PROFILES
         writePath = path.resolve(`${dataPath}/profiles`);
-
-        const mpUserProfiles = json.map(session => {
-            let profile = {
-                "$token": mpToken,
-                "$distinct_id": ``,
-                "$ip": 0,
-                "$set": {}
-            }
-            //uuid
-            let uuid = session.userId || session.fullVisitorId || session.visitorId || session.client_id || session.visitId || `not found!`
-            profile.$distinct_id = uuid;
-
-            let defaultProps = mapDefaults(session)
-
-            profile.$set = { ...profile.$set, ...defaultProps };
-
-            if (profile.$set.$latitude && profile.$set.$longitude) {
-                profile.$latitude = profile.$set.$latitude;
-                profile.$longitude = profile.$set.$longitude;
-            }
-
-            return profile;
-
-        });
-
+        const mpUserProfiles = mapUserProfiles(json, mpToken);
         totalProfileEntries += mpUserProfiles.length;
         console.log(`           transforming user profiles... (${smartCommas(mpUserProfiles.length)} profiles)`);
-
-        //write file
         let profileFileName = path.resolve(`${writePath}/${fileNamePrefix.split('.')[0]}-profiles.json`)
         await writeFilePromisified(profileFileName, JSON.stringify(mpUserProfiles, null, 2));
         transformedPaths.profiles.push(profileFileName);
@@ -90,142 +64,7 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken, ma
 
         //EVENTS
         writePath = path.resolve(`${dataPath}/events`);
-        let mpEvents = [];
-
-        //loop through sessions
-        for (const session of json) {
-            //each session gets a 'session start' and 'session end' event
-            let uuid = session.userId || session.fullVisitorId || session.visitorId || session.client_id || session.visitId || `not found!`;
-            //session time is in seconds
-            let startTime = parseInt(session.visitStartTime) * 1000;
-            let endTime = parseInt(session.visitStartTime) * 1000;
-            let defaultProps = mapDefaults(session);
-            let sessionSummary = session.totals;
-
-            let eventStartTemplate = {
-                "event": "session begins",
-                "properties": {
-                    "distinct_id": uuid,
-                    "time": startTime,
-                    "summary": sessionSummary,
-                    ...defaultProps
-                }
-            }
-            mpEvents.push(eventStartTemplate);
-
-            for (const hit of session.hits) {
-                let eventHitTemplate = {
-                    "event": ``,
-                    "properties": {
-                        "distinct_id": uuid,
-                        ...defaultProps
-                    }
-                }
-
-                //time calc... hit time is in ms
-                let eventTime;
-                if (parseInt(hit.time) === 0) {
-                    eventTime = startTime + 1000;
-
-                } else {
-                    eventTime = startTime + parseInt(hit.time)
-                }
-                eventHitTemplate.properties.time = eventTime;
-                //update end time
-                endTime = eventTime;
-
-                //figure out event name!
-                //todo SOME hits are getting the 'EVENT' name                
-                let eventName;
-                try {
-                    if (hit.eventInfo) {
-                        eventName = hit.eventInfo.eventAction;
-                    } else {
-                        throw Error();
-                    }
-                } catch (e) {
-                    eventName = hit.type;
-                }
-                eventHitTemplate.event = eventName;
-
-                //inlineer to help with adding simple props
-                const addSimpleProps = (key, alias = null) => {
-                    if (hit[key]) {
-                        if (alias) {
-                            eventHitTemplate.properties[alias] = hit[key]
-                        } else {
-                            eventHitTemplate.properties[key] = hit[key]
-                        }
-                    }
-                }
-                addSimpleProps('referrer', '$referrer');
-                addSimpleProps('isEntrance');
-                addSimpleProps('isExit');
-                addSimpleProps('isInteraction');
-
-                //inliner to help with adding nested props
-                const addNestedProps = (props, alias = null) => {
-                    if (Object.keys(props).length > 0) {
-                        if (alias) {
-                            eventHitTemplate.properties[alias] = props;
-                        } else {
-                            eventHitTemplate.properties = { ...eventHitTemplate.properties, ...props }
-                        }
-                    }
-                }
-                //test for various nest props
-                hit.experiment ? addNestedProps(hit.experiment) : false;
-                hit.product ? addNestedProps(hit.product, "products") : false;
-                hit.transaction ? addNestedProps(hit.transaction) : false;
-                hit.social ? addNestedProps(hit.social) : false;
-                hit.page ? addNestedProps(hit.page) : false;
-                hit.promotion ? addNestedProps(hit.promotion, "promotions") : false;
-                hit.item ? addNestedProps(hit.item) : false;
-                hit.appInfo ? addNestedProps(hit.appInfo) : false;
-                hit.eventInfo ? addNestedProps(hit.eventInfo) : false;
-                hit.customVariables ? addNestedProps(hit.customVariables) : false;
-                hit.customDimensions ? addNestedProps(hit.customDimensions) : false;
-                hit.customMetrics ? addNestedProps(hit.customMetrics) : false;
-
-                //for debugging
-                // eventHitTemplate.raw = hit
-
-                mpEvents.push(eventHitTemplate);
-
-
-            }
-
-            //bump end time one second to ensure sequencing
-            endTime += 1000
-
-            let eventEndTemplate = {
-                "event": "session ended",
-                "properties": {
-                    "distinct_id": uuid,
-                    "time": endTime,
-                    "summary": sessionSummary,
-                    ...defaultProps
-                }
-            }
-            mpEvents.push(eventEndTemplate);
-        }
-
-        //set insert_id on every event
-        for (const event of mpEvents) {
-            let hash = md5(JSON.stringify(event));
-            event.properties.$insert_id = hash;
-        }
-
-
-        //THIS IS JUST TO SEE SAMPLE DATA DO NOT USE
-        if (makeTimeCurrent) {
-            let oldest = dayjs(mpEvents.slice(mpEvents.length - 1)[0].properties.time)
-            let now = dayjs();
-            let timeToAdd = now.diff(oldest, "ms") - (345600 * 1000);
-            mpEvents.forEach((ev) => {
-                ev.properties.time += timeToAdd;
-            })
-        }
+        const mpEvents = mapEvents(json, makeTimeCurrent);
         totalEventsTransformed += mpEvents.length
         console.log(`           transforming events... (${smartCommas(mpEvents.length)} events)`);
 
@@ -234,7 +73,7 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken, ma
         await writeFilePromisified(eventsFileName, JSON.stringify(mpEvents, null, 2));
         transformedPaths.events.push(eventsFileName);
 
-        
+
         //create merge tables
         let mergeTable = [];
         writePath = path.resolve(`${dataPath}/mergeTables`);
@@ -326,7 +165,188 @@ function getSessionSummary(session) {
 
 }
 
-function mapDefaults(session) {
+export function mapUserProfiles(json, mpToken) {
+    return json.map(session => {
+        let profile = {
+            "$token": mpToken,
+            "$distinct_id": ``,
+            "$ip": 0,
+            "$set": {}
+        }
+        //uuid
+        let uuid = session.userId || session.fullVisitorId || session.visitorId || session.client_id || session.visitId || `not found!`
+        profile.$distinct_id = uuid;
+
+        let defaultProps = mapDefaults(session)
+
+        profile.$set = { ...profile.$set, ...defaultProps };
+
+        if (profile.$set.$latitude && profile.$set.$longitude) {
+            profile.$latitude = profile.$set.$latitude;
+            profile.$longitude = profile.$set.$longitude;
+        }
+
+        return profile;
+
+    });
+}
+
+export function mapEvents(json, makeTimeCurrent = false) {
+    let mpEvents = [];
+
+    //loop through sessions
+    for (const session of json) {
+        //each session gets a 'session start' and 'session end' event
+        let uuid = session.userId || session.fullVisitorId || session.visitorId || session.client_id || session.visitId || `not found!`;
+        //session time is in seconds
+        let startTime = parseInt(session.visitStartTime) * 1000;
+        let endTime = parseInt(session.visitStartTime) * 1000;
+        let defaultProps = mapDefaults(session);
+        let sessionSummary = session.totals;
+
+        let eventStartTemplate = {
+            "event": "session begins",
+            "properties": {
+                "distinct_id": uuid,
+                "time": startTime,
+                "summary": sessionSummary,
+                ...defaultProps
+            }
+        }
+        mpEvents.push(eventStartTemplate);
+
+        for (const hit of session.hits) {
+            let eventHitTemplate = {
+                "event": ``,
+                "properties": {
+                    "distinct_id": uuid,
+                    ...defaultProps
+                }
+            }
+
+            //time calc... hit time is in ms
+            let eventTime;
+            if (parseInt(hit.time) === 0) {
+                eventTime = startTime + 1000;
+
+            } else {
+                eventTime = startTime + parseInt(hit.time)
+            }
+            eventHitTemplate.properties.time = eventTime;
+            //update end time
+            endTime = eventTime;
+
+            //figure out event name!
+            //todo SOME hits are getting the 'EVENT' name                
+            let eventName;
+            try {
+                if (hit.eventInfo) {
+                    eventName = hit.eventInfo.eventAction;
+                } else {
+                    throw Error();
+                }
+            } catch (e) {
+                eventName = hit.type;
+            }
+            eventHitTemplate.event = eventName;
+
+            //inlineer to help with adding simple props
+            const addSimpleProps = (key, alias = null) => {
+                if (hit[key]) {
+                    if (alias) {
+                        eventHitTemplate.properties[alias] = hit[key]
+                    } else {
+                        eventHitTemplate.properties[key] = hit[key]
+                    }
+                }
+            }
+            addSimpleProps('referrer', '$referrer');
+            addSimpleProps('isEntrance');
+            addSimpleProps('isExit');
+            addSimpleProps('isInteraction');
+
+            //inliner to help with adding nested props
+            const addNestedProps = (props, alias = null) => {
+                if (Object.keys(props).length > 0) {
+                    if (alias) {
+                        eventHitTemplate.properties[alias] = props;
+                    } else {
+                        eventHitTemplate.properties = { ...eventHitTemplate.properties, ...props }
+                    }
+                }
+            }
+
+            //inliner to help with custom props + dimensions
+            const addCustomMetrics = (customDims, prefix) => {
+                let tempObj = {};
+                customDims.forEach((dimension) => {                    
+                    tempObj[`${prefix} #${dimension.index}`] = dimension.value
+                })
+                if (Object.keys(tempObj).length > 0) {
+                    eventHitTemplate.properties = { ...eventHitTemplate.properties, ...tempObj }
+                }
+            }
+
+            //test for various nest props
+            hit.experiment ? addNestedProps(hit.experiment) : false;
+            hit.product ? addNestedProps(hit.product, "products") : false;
+            hit.transaction ? addNestedProps(hit.transaction) : false;
+            hit.social ? addNestedProps(hit.social) : false;
+            hit.page ? addNestedProps(hit.page) : false;
+            hit.promotion ? addNestedProps(hit.promotion, "promotions") : false;
+            hit.item ? addNestedProps(hit.item) : false;
+            hit.appInfo ? addNestedProps(hit.appInfo) : false;
+            hit.eventInfo ? addNestedProps(hit.eventInfo) : false;
+
+            //todo flatten these!
+            hit.customVariables ? addCustomMetrics(hit.customVariables, `variable`) : false;
+            hit.customDimensions ? addCustomMetrics(hit.customDimensions, `dimension`) : false;
+            hit.customMetrics ? addCustomMetrics(hit.customMetrics, `metric`) : false;
+
+            //for debugging
+            // eventHitTemplate.raw = hit
+
+            mpEvents.push(eventHitTemplate);
+
+
+        }
+
+        //bump end time one second to ensure sequencing
+        endTime += 1000
+
+        let eventEndTemplate = {
+            "event": "session ends",
+            "properties": {
+                "distinct_id": uuid,
+                "time": endTime,
+                "summary": sessionSummary,
+                ...defaultProps
+            }
+        }
+        mpEvents.push(eventEndTemplate);
+    }
+
+    //set insert_id on every event
+    for (const event of mpEvents) {
+        let hash = md5(JSON.stringify(event));
+        event.properties.$insert_id = hash;
+    }
+
+
+    //THIS IS JUST TO SEE SAMPLE DATA DO NOT USE
+    if (makeTimeCurrent) {
+        let oldest = dayjs(mpEvents.slice(mpEvents.length - 1)[0].properties.time)
+        let now = dayjs();
+        let timeToAdd = now.diff(oldest, "ms") - (345600 * 1000);
+        mpEvents.forEach((ev) => {
+            ev.properties.time += timeToAdd;
+        })
+    }
+
+    return mpEvents;
+}
+
+export function mapDefaults(session) {
     let props = {};
     //map default props
     //all props on the device key of GA session

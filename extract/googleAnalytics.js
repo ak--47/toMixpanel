@@ -118,7 +118,7 @@ function smartCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-function isGzip(buf) {
+export function isGzip(buf) {
     if (!buf || buf.length < 3) {
         return false;
     }
