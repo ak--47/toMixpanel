@@ -174,7 +174,12 @@ export function mapEvents(json, makeTimeCurrent = false) {
             let eventName;
             try {
                 if (hit.eventInfo) {
-                    eventName = hit.eventInfo.eventAction || hit.eventInfo.eventCategory;
+                    if (hit.eventInfo.eventAction.toLowerCase() !== "na" && hit.eventInfo.eventAction !== "") {
+                        eventName = hit.eventInfo.eventAction;
+                    }
+                    else {
+                        eventName = hit.eventInfo.eventCategory;
+                    }
                 } else {
                     throw new Error();
                 }
