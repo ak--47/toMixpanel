@@ -103,7 +103,7 @@ export function mapUserProfiles(json, mpToken) {
             "$set": {}
         }
         //resolve distinct_id as any one of these props
-        let uuid = session.userId || session.fullVisitorId || session.visitorId || session.client_id || session.visitId || `not found!`
+        let uuid = session.userId || session.fullVisitorId || session.visitorId || session.client_id || session.visitId || ``
         profile.$distinct_id = uuid;
 
         //gather default props
@@ -127,7 +127,7 @@ export function mapEvents(json, makeTimeCurrent = false) {
     //loop through sessions
     for (const session of json) {
         //resolve distinct_id as any one of these props
-        let uuid = session.userId || session.fullVisitorId || session.visitorId || session.client_id || session.visitId || `not found!`;
+        let uuid = session.userId || session.fullVisitorId || session.visitorId || session.client_id || session.visitId || ``;
 
         //session time is in seconds; convert to ms
         let startTime = parseInt(session.visitStartTime) * 1000;
