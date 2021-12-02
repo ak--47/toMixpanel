@@ -217,7 +217,7 @@ export function mapEvents(json, makeTimeCurrent = false) {
                 let tempObj = {};
                 customDims.forEach((dimension) => {
                     //only set dimensions that have values
-                    if (dimension.value.toLowerCase() !== "na" || dimension.value !== "") {
+                    if (dimension.value.toLowerCase() !== "na" && dimension.value !== "") {
                         tempObj[`${prefix} #${dimension.index} (${suffix})`] = dimension.value
                     }
                 })
