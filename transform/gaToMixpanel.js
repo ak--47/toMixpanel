@@ -74,98 +74,27 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken, ma
         transformedPaths.events.push(eventsFileName);
 
 
-        //create merge tables
-        let mergeTable = [];
-        writePath = path.resolve(`${dataPath}/mergeTables`);
-        let allSessionsWithIdentifiers = json.map(session => {
-            return {
-                userId: session.userId,
-                fullVisitorId: session.fullVisitorId,
-                visitorId: session.visitorId,
-                clientId: session.client_id,
-                visitId: session.visitId
-            }
-        });
-        //TODO MERGE THESE TOGETHER SOMEHOW!
-
-
-
-        //     //create merge tables
-        //     let mergeTable = [];
-        //     writePath = path.resolve(`${dataPath}/mergeTables`);
-
-        //     for (let ampEvent of json) {
-        //         // //pair device_id & user_id
-        //         // if (ampEvent.device_id && ampEvent.user_id) {
-        //         //     mergeTable.push({
-        //         //         "event": "$merge",
-        //         //         "properties": {
-        //         //             "$distinct_ids": [
-        //         //                 ampEvent.device_id,
-        //         //                 ampEvent.user_id
-        //         //             ]
-        //         //         }
-        //         //     });
-        //         // }
-
-        //         // //pair device_id & amplitude_id
-        //         // if (ampEvent.device_id && ampEvent.amplitude_id) {
-        //         //     mergeTable.push({
-        //         //         "event": "$merge",
-        //         //         "properties": {
-        //         //             "$distinct_ids": [
-        //         //                 ampEvent.device_id,
-        //         //                 ampEvent.amplitude_id.toString()
-        //         //             ]
-        //         //         }
-        //         //     })
-        //         // };
-
-        //         //pair user_id & amplitude_id
-        //         if (ampEvent.user_id && ampEvent.amplitude_id) {
-        //             mergeTable.push({
-        //                 "event": "$merge",
-        //                 "properties": {
-        //                     "$distinct_ids": [
-        //                         ampEvent.user_id,
-        //                         ampEvent.amplitude_id.toString()
-        //                     ]
-        //                 }
-        //             })
-        //         };
-
+        // //TODO: create merge tables for all possible uuids
+        // let mergeTable = [];
+        // writePath = path.resolve(`${dataPath}/mergeTables`);
+        // let allSessionsWithIdentifiers = json.map(session => {
+        //     return {
+        //         userId: session.userId,
+        //         fullVisitorId: session.fullVisitorId,
+        //         visitorId: session.visitorId,
+        //         clientId: session.client_id,
+        //         visitId: session.visitId
         //     }
-
-        //     //de-dupe the merge table
-        //     let mergeTableDeDuped = Array.from(new Set(mergeTable.map(o => JSON.stringify(o))), s => JSON.parse(s));
-
-
-        //     totalMergeTables += mergeTableDeDuped.length
-        //     console.log(`       creating merge tables... (${smartCommas(mergeTableDeDuped.length)} entries)`);
-
-        //     //write file
-        //     let mergeTableFileName = path.resolve(`${writePath}/${fileNamePrefix.split('.')[0]}-mergeTable.json`)
-        //     await writeFilePromisified(mergeTableFileName, JSON.stringify(mergeTableDeDuped, null, 2));
-        //     transformedPaths.mergeTables.push(mergeTableFileName);
-        //     console.log('\n')
-
-
-        // }
-
-        // //console.log(transformedPaths)
-        // console.log(`transfomed ${smartCommas(totalProfileEntries)} profiles operations, ${smartCommas(totalEventsTransformed)} events, and ${smartCommas(totalMergeTables)} merge entries\n`)
+        // });
+        
         return transformedPaths
     }
 }
 
 //UTILITY METHODS
 
-function getSessionSummary(session) {
-    let summary = {};
-
-}
-
 export function mapUserProfiles(json, mpToken) {
+    //every "line" in GA data represents a session; for each line we $set a user profile
     return json.map(session => {
         let profile = {
             "$token": mpToken,
@@ -173,14 +102,15 @@ export function mapUserProfiles(json, mpToken) {
             "$ip": 0,
             "$set": {}
         }
-        //uuid
+        //resolve distinct_id as any one of these props
         let uuid = session.userId || session.fullVisitorId || session.visitorId || session.client_id || session.visitId || `not found!`
         profile.$distinct_id = uuid;
 
+        //gather default props
         let defaultProps = mapDefaults(session)
-
         profile.$set = { ...profile.$set, ...defaultProps };
 
+        //if $lat and $long is given, move it to the top of the object
         if (profile.$set.$latitude && profile.$set.$longitude) {
             profile.$latitude = profile.$set.$latitude;
             profile.$longitude = profile.$set.$longitude;
@@ -196,14 +126,16 @@ export function mapEvents(json, makeTimeCurrent = false) {
 
     //loop through sessions
     for (const session of json) {
-        //each session gets a 'session start' and 'session end' event
+        //resolve distinct_id as any one of these props
         let uuid = session.userId || session.fullVisitorId || session.visitorId || session.client_id || session.visitId || `not found!`;
-        //session time is in seconds
+
+        //session time is in seconds; convert to ms
         let startTime = parseInt(session.visitStartTime) * 1000;
         let endTime = parseInt(session.visitStartTime) * 1000;
         let defaultProps = mapDefaults(session);
         let sessionSummary = session.totals;
 
+        //each session gets a 'session begins' and 'session ends' event
         let eventStartTemplate = {
             "event": "session begins",
             "properties": {
@@ -215,6 +147,7 @@ export function mapEvents(json, makeTimeCurrent = false) {
         }
         mpEvents.push(eventStartTemplate);
 
+        //session events are in 'hits'
         for (const hit of session.hits) {
             let eventHitTemplate = {
                 "event": ``,
@@ -224,7 +157,7 @@ export function mapEvents(json, makeTimeCurrent = false) {
                 }
             }
 
-            //time calc... hit time is in ms
+            //time calc for each "hit" is in ms, offset from session begins
             let eventTime;
             if (parseInt(hit.time) === 0) {
                 eventTime = startTime + 1000;
@@ -233,11 +166,11 @@ export function mapEvents(json, makeTimeCurrent = false) {
                 eventTime = startTime + parseInt(hit.time)
             }
             eventHitTemplate.properties.time = eventTime;
-            //update end time
+
+            //always update end time
             endTime = eventTime;
 
-            //figure out event name!
-            //todo SOME hits are getting the 'EVENT' name                
+            //resolve event's name
             let eventName;
             try {
                 if (hit.eventInfo) {
@@ -250,12 +183,12 @@ export function mapEvents(json, makeTimeCurrent = false) {
             }
 
             if (!eventName) {
-                debugger;
+                console.log(`could not resolve event name for:\n${JSON.stringify(hit, null, 2)}`)
             }
 
             eventHitTemplate.event = eventName;
 
-            //inlineer to help with adding simple props
+            //helper for standard props on hits
             const addSimpleProps = (key, alias = null) => {
                 if (hit[key]) {
                     if (alias) {
@@ -265,14 +198,10 @@ export function mapEvents(json, makeTimeCurrent = false) {
                     }
                 }
             }
-            addSimpleProps('referrer', '$referrer');
-            addSimpleProps('isEntrance');
-            addSimpleProps('isExit');
-            addSimpleProps('isInteraction');
 
-            //inliner to help with adding nested props
+            //helper for standard hit props that are nested
             const addNestedProps = (props, alias = null) => {
-                
+
                 if (Object.keys(props).length > 0) {
                     if (alias) {
                         eventHitTemplate.properties[alias] = props;
@@ -282,18 +211,28 @@ export function mapEvents(json, makeTimeCurrent = false) {
                 }
             }
 
-            //inliner to help with custom props + dimensions
-            const addCustomMetrics = (customDims, prefix) => {
+            //helper for custom dimensions
+            //note: we do not get labels (keys) from GA raw data; just an index
+            const addCustomMetrics = (customDims, prefix, suffix) => {
                 let tempObj = {};
-                customDims.forEach((dimension) => {                    
-                    tempObj[`${prefix} #${dimension.index}`] = dimension.value
+                customDims.forEach((dimension) => {
+                    //only set dimensions that have values
+                    if (dimension.value.toLowerCase() !== "na" || dimension.value !== "") {
+                        tempObj[`${prefix} #${dimension.index} (${suffix})`] = dimension.value
+                    }
                 })
                 if (Object.keys(tempObj).length > 0) {
                     eventHitTemplate.properties = { ...eventHitTemplate.properties, ...tempObj }
                 }
             }
 
-            //test for various nest props
+            //standard hit props
+            addSimpleProps('referrer', '$referrer');
+            addSimpleProps('isEntrance');
+            addSimpleProps('isExit');
+            addSimpleProps('isInteraction');
+
+            //test for standard nested props
             hit.experiment ? addNestedProps(hit.experiment) : false;
             hit.product ? addNestedProps(hit.product, "products") : false;
             hit.transaction ? addNestedProps(hit.transaction) : false;
@@ -304,20 +243,16 @@ export function mapEvents(json, makeTimeCurrent = false) {
             hit.appInfo ? addNestedProps(hit.appInfo) : false;
             hit.eventInfo ? addNestedProps(hit.eventInfo) : false;
 
-            //todo flatten these!
-            hit.customVariables ? addCustomMetrics(hit.customVariables, `variable`) : false;
-            hit.customDimensions ? addCustomMetrics(hit.customDimensions, `dimension`) : false;
-            hit.customMetrics ? addCustomMetrics(hit.customMetrics, `metric`) : false;
-
-            //for debugging
-            // eventHitTemplate.raw = hit
+            //test for custom metrics
+            hit.customVariables ? addCustomMetrics(hit.customVariables, `variable`, eventName) : false;
+            hit.customDimensions ? addCustomMetrics(hit.customDimensions, `dimension`, eventName) : false;
+            hit.customMetrics ? addCustomMetrics(hit.customMetrics, `metric`, eventName) : false;
 
             mpEvents.push(eventHitTemplate);
 
-
         }
 
-        //bump end time one second to ensure sequencing
+        //bump session ends time one second to ensure proper sequencing
         endTime += 1000
 
         let eventEndTemplate = {
@@ -332,14 +267,14 @@ export function mapEvents(json, makeTimeCurrent = false) {
         mpEvents.push(eventEndTemplate);
     }
 
-    //set insert_id on every event
+    //set an $insert_id on every event
     for (const event of mpEvents) {
         let hash = md5(JSON.stringify(event));
         event.properties.$insert_id = hash;
     }
 
 
-    //THIS IS JUST TO SEE SAMPLE DATA DO NOT USE
+    //bump events into the present (if the data is really old)
     if (makeTimeCurrent) {
         let oldest = dayjs(mpEvents.slice(mpEvents.length - 1)[0].properties.time)
         let now = dayjs();
@@ -353,9 +288,10 @@ export function mapEvents(json, makeTimeCurrent = false) {
 }
 
 export function mapDefaults(session) {
+    //map default GA props to default mp Props
     let props = {};
-    //map default props
-    //all props on the device key of GA session
+    
+    //device pairs
     let GAmixDevicePairs = [
         ["browser", "$browser"],
         ["browserSize", "screen size"],
@@ -370,6 +306,7 @@ export function mapDefaults(session) {
         ["screenResolution", "screen size"]
     ];
 
+    //location pairs
     let GAmixLocationPairs = [
         ["continent", "continent"],
         ["subContinent", "sub continent"],
@@ -381,6 +318,7 @@ export function mapDefaults(session) {
         ["longitude", "$longitude"]
     ]
 
+    //attribution pairs
     let GAmixAttributionPairs = [
         ["adContent", "utm_content"],
         ["adWordsClickInfo", "ad words info"],
@@ -393,8 +331,8 @@ export function mapDefaults(session) {
         ["source", "utm_source"]
     ]
 
+    //loop through all pairs; if they exist, append them
 
-    //include defaults, if they exist:
     //DEVICE INFO:
     for (let GAmixDevicePair of GAmixDevicePairs) {
         if (session.device[GAmixDevicePair[0]]) {
@@ -415,20 +353,21 @@ export function mapDefaults(session) {
             props[GAmixAttributionPair[1]] = session.trafficSource[GAmixAttributionPair[0]]
         }
     }
+
     try {
-        //explicit check for long/latitude
+        //check for $lat and $long
         if (session.geoNetwork.latitude && session.geoNetwork.longitude) {
             props.$latitude = session.geoNetwork.latitude
             props.$longitude = session.geoNetwork.longitude
         }
     } catch (e) {}
+    
     try {
+        //check for channel groupings
         if (session.channelGrouping) {
             props["UTM Channel"] = session.channelGrouping;
         }
-    } catch (e) {
-
-    }
+    } catch (e) {}
 
     return props;
 }

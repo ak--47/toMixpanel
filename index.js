@@ -41,9 +41,19 @@ async function main() {
     
     //create a root folder for everything
     const now = dayjs().format('YYYY-MM-DD HH.MM.ss A');
-    const directoryName = `${config.source.name} ${now}`;
-    mkdirSync(path.resolve(`./savedData/${directoryName}/`));
-    //const directory = path.resolve(directoryName)
+    let directoryName = `${config.source.name} ${now}`;
+    try {
+        if(config.source.options.path_to_data) {
+            directoryName = path.resolve(`./${config.source.options.path_to_data}`)
+        }        
+        else {
+            mkdirSync(path.resolve(`./savedData/${directoryName}/`));
+        }
+    } catch (error) {
+        mkdirSync(path.resolve(`./savedData/${directoryName}/`));
+    }
+        
+    
 
     //determine which etl to run
     switch (config.source.name.toLowerCase()) {
