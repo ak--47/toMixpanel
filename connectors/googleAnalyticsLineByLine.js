@@ -15,6 +15,11 @@ async function main(config, directoryName) {
         password: config.destination.service_account_pass,
         project_id: config.destination.project_id
     }
+
+    let options = config.destination.options || {};
+    let doPeople = options.people
+    let doEvents = options.events
+
     let totalEventsImported = 0;
     let totalProfilesImported = 0;
     console.log(`checking data at ${config.source.options.path_to_data}`);
@@ -43,13 +48,17 @@ async function main(config, directoryName) {
                     let session = JSON.parse(line);
 
                     //PROFILES
-                    mapUserProfiles([session], config.destination.token).forEach(profile => profiles.push(profile));
+                    if (doPeople) {
+                        mapUserProfiles([session], config.destination.token).forEach(profile => profiles.push(profile));
+                    }
 
                     //EVENTS
-                    mapEvents([session]).forEach(event => events.push(event));
+                    if (doEvents) {
+                        mapEvents([session]).forEach(event => events.push(event));
+                    }
 
                     //IF EVENTS > 1k ... flush and empty array
-                    if (events.length > 1000) {
+                    if (events.length > 1000 || profiles.length > 10000) {
                         console.log(`           flushing! ${path.basename(filePath)}`)
 
                         await sendEventsToMixpanel(mixpanelCreds, events, config.destination.options['is EU?'], true);
