@@ -39,24 +39,44 @@ async function main(config, directoryName) {
         //fix time
         event[cols.time_col] = dayjs(event[cols.time_col]).unix();
 
+		//ignore cols
+		if (config.source.options.ignore_cols.length >= 1) {
+			for (let header of config.source.options.ignore_cols) {
+				delete event[header];
+			}
+		}
+
         //rename keys
         renameKeys(transformedEvent.properties, event, "distinct_id", cols.distinct_id_col);
+		if (cols.distinct_id_col !== "distinct_id") {
+			delete event[cols.distinct_id_col];
+		}
         renameKeys(transformedEvent.properties, event, "time", cols.time_col);
-        if (cols.insert_id_col) {
+		if (cols.time_col !== "time") {
+			delete event[cols.time_col];
+		}
+        
+		//use insert_id if it exists
+		if (cols.insert_id_col) {
             renameKeys(transformedEvent.properties, event, "$insert_id", cols.insert_id_col);
         }
 
-        let profile = {
-            "$token": config.destination.token,
-            "$distinct_id": transformedEvent.properties.distinct_id,
-            "$ip": "0",
-            "$ignore_time": true,
-            "$set": {
-                "uuid": transformedEvent.properties.distinct_id
-            }
-        }
         events.push(transformedEvent);
-        profiles.push(profile);
+		
+		//do profiles
+        if (config.source.options.create_profiles) {
+            let profile = {
+                "$token": config.destination.token,
+                "$distinct_id": transformedEvent.properties.distinct_id,
+                "$ip": "0",
+                "$ignore_time": true,
+                "$set": {
+                    "uuid": transformedEvent.properties.distinct_id
+                }
+            }
+            profiles.push(profile);
+        }
+
     })
 
     let uniqueProfiles = profiles.filter((v, i, a) => a.findIndex(t => (t.$distinct_id === v.$distinct_id)) === i)
@@ -67,6 +87,8 @@ async function main(config, directoryName) {
     let eventFilePath = `${path.resolve("./savedData/" + directoryName)}/events.json`
     let profileFilePath = `${path.resolve("./savedData/" + directoryName)}/profiles.json`
 
+
+	//write copies
     await writeFile(eventFilePath, JSON.stringify(events, null, 2));
     await writeFile(profileFilePath, JSON.stringify(uniqueProfiles, null, 2));
 

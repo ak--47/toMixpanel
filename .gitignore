@@ -3,6 +3,7 @@ savedData/*
 !savedData/.gitkeep 
 sampleData/*
 customerData/*
+dev/*
 
 #env
 .env

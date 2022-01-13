@@ -8,7 +8,8 @@
             "insert_id_col": "insert_id"
         },
         "options" : {
-            "ignore_cols": []
+            "ignore_cols": ["favoriteColor"],
+            "save_local_copy": true 
         }
     },
     "destination": {
