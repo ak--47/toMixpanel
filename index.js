@@ -13,6 +13,7 @@ import dayjs from 'dayjs';
 //connectors
 import amplitudeETL from './connectors/amplitudeETL.js'
 import googleAnalyticsETL from './connectors/googleAnalyticsETL.js'
+import csvETL from './connectors/csvETL.js'
 
 
 
@@ -65,6 +66,10 @@ async function main() {
             console.log(`lets migrate data from ${config.source.name} to Mixpanel!\n\n`);
             googleAnalyticsETL(config, directoryName);
             // code block
+            break;
+        case 'csv':
+            console.log(`lets migrate ${config.source.name} data to Mixpanel!\n\n`);
+            csvETL(config, directoryName)
             break;
         default:
             console.log('could not determine data source')

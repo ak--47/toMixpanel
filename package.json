@@ -1,13 +1,14 @@
 {
   "name": "tomixpanel",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ETL for data into Mixpanel from many sources",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "prune": "rm -rf ./savedData/*",
     "amplitude": "npm run prune && node --inspect --max_old_space_size=8192 ./index.js ./configAMP.json",
-    "ga360": "npm run prune && node --inspect --max_old_space_size=8192 ./index.js ./configGA360.json"
+    "ga360": "npm run prune && node --inspect --max_old_space_size=8192 ./index.js ./configGA360.json",
+    "csv": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./configCSV.json"
   },
   "type": "module",
   "keywords": [],
@@ -22,6 +23,7 @@
     "jsonschema": "^1.4.0",
     "md5": "^2.3.0",
     "node-fetch": "^3.0.0",
-    "node-gzip": "^1.1.2"
+    "node-gzip": "^1.1.2",
+    "papaparse": "^5.3.1"
   }
 }

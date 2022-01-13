@@ -8,6 +8,7 @@ customerData/*
 .env
 configAMP.json
 configGA360.json
+configCSV.json
 
 
 #osx remnants
