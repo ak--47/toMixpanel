@@ -41,7 +41,7 @@ async function main() {
     console.log(`found config @ ${configPath}\n`);
     
     //create a root folder for everything
-    const now = dayjs().format('YYYY-MM-DD HH.MM.ss A');
+    const now = dayjs().format('YYYY-MM-DD HH.MM.ss.SSS A');
     let directoryName = `${config.source.name} ${now}`;
     try {
         if(config.source.options.path_to_data) {

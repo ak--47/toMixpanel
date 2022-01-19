@@ -82,6 +82,7 @@ required params: `api_key`, `api_secret`, `start_date`, `end_date`, `is EU?`
 - [csv](https://github.com/ak--47/toMixpanel/blob/main/examples/configExample-csv.json)
 
 required params: `filePath`, `event_name_col`, `distinct_id_col`, `time_col`, `insert_id_col`
+(note: `filePath` can be EITHER a path to a CSV file or a folder which contains multiple CSV files)
 
 - [ga360](https://github.com/ak--47/toMixpanel/blob/main/examples/configExample-ga360.json)\*
 
