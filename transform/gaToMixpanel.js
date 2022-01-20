@@ -142,6 +142,7 @@ export function mapEvents(json, makeTimeCurrent = false) {
                 "distinct_id": uuid,
                 "time": startTime,
                 "summary": sessionSummary,
+                "$source": `ga360toMixpanel (by AK)`,
                 ...defaultProps
             }
         }
@@ -153,6 +154,7 @@ export function mapEvents(json, makeTimeCurrent = false) {
                 "event": ``,
                 "properties": {
                     "distinct_id": uuid,
+                    "$source": `ga360toMixpanel (by AK)`,
                     ...defaultProps
                 }
             }
@@ -266,6 +268,7 @@ export function mapEvents(json, makeTimeCurrent = false) {
                 "distinct_id": uuid,
                 "time": endTime,
                 "summary": sessionSummary,
+                "$source": `ga360toMixpanel (by AK)`,
                 ...defaultProps
             }
         }

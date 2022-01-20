@@ -100,7 +100,8 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
                     "ip": amplitudeEvent.ip_address,
                     "$city": amplitudeEvent.city,
                     "$region": amplitudeEvent.region,
-                    "mp_country_code": amplitudeEvent.country
+                    "mp_country_code": amplitudeEvent.country,
+                    "$source": `amplitudeToMixpanel (by AK)`
                 }
 
             }

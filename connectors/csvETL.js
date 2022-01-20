@@ -96,6 +96,9 @@ async function main(config, directoryName) {
                 renameKeys(transformedEvent.properties, event, "$insert_id", cols.insert_id_col);
             }
 
+            //tag :)
+            transformedEvent.properties.$source = `csvtoMixpanel (by AK)`
+
             events.push(transformedEvent);
 
             //do profiles

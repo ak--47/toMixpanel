@@ -62,16 +62,16 @@ async function main(creds, options, directory = "foo", isEU) {
     writePath = path.resolve(`${dataPath}/unzip`);
     let filesToUngzip = [];
 
-    try {        
+    try {
         execSync(`unzip -j ${escapeForShell(path.resolve(dataPath+"/downloaded/data.zip"))} -d ${escapeForShell(writePath)}`);
         let allFiles = await readDirPromisified(writePath);
         for (let file of allFiles) {
             if (file.includes(".json.gz")) {
                 filesToUngzip.push(file)
             }
-            
+
         }
-        console.log(`       unzipped ${smartCommas(filesToUngzip.length)} files\n\n`)     
+        console.log(`       unzipped ${smartCommas(filesToUngzip.length)} files\n\n`)
     } catch (e) {
         console.log(`unzip is not available... trying adm-zip`)
         const zipped = new zip(`${dataPath}/downloaded/data.zip`);
@@ -99,22 +99,31 @@ async function main(creds, options, directory = "foo", isEU) {
     console.log(`   gunzipping data... (${smartCommas(filesToUngzip.length)} files)`);
     writePath = `${dataPath}/json`;
     for (let file of filesToUngzip) {
-
-        let dataFile = await readFilePromisified(path.resolve(`${dataPath}/unzip/${file}`));
-        let gunzipped = await gun.ungzip(dataFile)
-        let amplitudeRawData = gunzipped.toString('utf-8');
-
-        //counting events recieved        
-        let numOfLines = amplitudeRawData.split('\n').length - 1
-        numEvents += numOfLines;
-
-        //await streamPipeline(gunzipped, createWriteStream(`${writePath}/${file.split('.gz')[0]}`));
-        await writeFilePromisified(`${writePath}/${file.split('.gz')[0]}`, amplitudeRawData);
+        
+        try {
+            let source = escapeForShell(path.resolve(`${dataPath}/unzip/${file}`))
+            let dest = escapeForShell(path.resolve(`${writePath}/${file}`))
+            execSync(`gunzip -c ${source} > ${dest}`);
+            let numLines = execSync(`wc -l ${dest}`);
+            numEvents += Number(numLines.toString().split('/').map(x => x.trim())[0]);           
+            
+        } catch (e) {
+            //counting events recieved
+            console.log(`       gunzip FAIL! falling back on gun`)
+            let dataFile = await readFilePromisified(path.resolve(`${dataPath}/unzip/${file}`));
+            let gunzipped = await gun.ungzip(dataFile)
+            let amplitudeRawData = gunzipped.toString('utf-8');
+            let numOfLines = amplitudeRawData.split('\n').length - 1
+            numEvents += numOfLines;
+            await writeFilePromisified(`${writePath}/${file.split('.gz')[0]}`, amplitudeRawData);
+        }       
+       
 
     }
 
-
-    console.log(`   got ${smartCommas(numEvents)} events from amplitude...`);
+    if (numEvents > 0) {
+        console.log(`   got ${smartCommas(numEvents)} events from amplitude...`);
+    }
     console.log('\n')
     let rawFileNames = await readDirPromisified(writePath)
     let exports = rawFileNames.map(filePath => path.resolve(`${writePath}/${filePath}`));
