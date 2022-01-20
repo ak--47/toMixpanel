@@ -16,7 +16,6 @@ import googleAnalyticsETL from './connectors/googleAnalyticsETL.js'
 import csvETL from './connectors/csvETL.js'
 
 
-
 async function main() {
     console.log('\nstarting up!\n')
     //figure out where config is
@@ -53,8 +52,7 @@ async function main() {
     } catch (error) {
         mkdirSync(path.resolve(`./savedData/${directoryName}/`));
     }
-        
-    
+            
 
     //determine which etl to run
     switch (config.source.name.toLowerCase()) {
@@ -75,6 +73,7 @@ async function main() {
             console.log('could not determine data source')
     }
 
+    //if save local copy is disabled, remove saved files
 
 }
 

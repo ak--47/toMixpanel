@@ -9,7 +9,7 @@ const readFilePromisified = promisify(readFile);
 //CONFIG + LIMITS
 const ENDPOINT_URL_US = `http://api.mixpanel.com/engage`
 const ENDPOINT_URL_EU = `https://api-eu.mixpanel.com/engage`
-const PROFILES_PER_REQUEST = 50
+const PROFILES_PER_REQUEST = 2000
 
 
 async function main(dataFile, isEU, isAlreadyABatch = false) {
@@ -44,7 +44,7 @@ async function main(dataFile, isEU, isAlreadyABatch = false) {
 
         console.log(`       parsed ${numberWithCommas(allData.length)} profiles from ${dataFile}`);
     }
-    //max 50 profiles per batch
+    //max 2k profiles per batch
     const batches = chunkForNumOfProfiles(allData, PROFILES_PER_REQUEST);
 
 
@@ -61,7 +61,7 @@ async function main(dataFile, isEU, isAlreadyABatch = false) {
         // }
         // console.log(`   done ✅`)
         // console.log(`   mixpanel response:`)
-        console.log(`           ${JSON.stringify(result)}`);
+        //console.log(`           ${JSON.stringify(result)}`);
         //console.log('\n')
         numRecordsImported += profileBatch.length;
     }

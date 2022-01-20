@@ -102,7 +102,7 @@ async function main(creds, options, directory = "foo", isEU) {
         
         try {
             let source = escapeForShell(path.resolve(`${dataPath}/unzip/${file}`))
-            let dest = escapeForShell(path.resolve(`${writePath}/${file}`))
+            let dest = escapeForShell(path.resolve(`${writePath}/${file.split('.gz')[0]}`))
             execSync(`gunzip -c ${source} > ${dest}`);
             let numLines = execSync(`wc -l ${dest}`);
             numEvents += Number(numLines.toString().split('/').map(x => x.trim())[0]);           
