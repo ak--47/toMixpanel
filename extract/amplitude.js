@@ -6,6 +6,8 @@ import * as path from 'path';
 import fetch from 'node-fetch';
 import { default as zip } from 'adm-zip';
 import { default as gun } from 'node-gzip';
+import { execSync } from 'child_process'
+
 
 
 
@@ -20,7 +22,7 @@ const writeFilePromisified = promisify(writeFile);
 const readDirPromisified = promisify(readdir);
 
 async function main(creds, options, directory = "foo", isEU) {
-    let baseURL = isEU ? baseURL_EU : baseURL_US;    
+    let baseURL = isEU ? baseURL_EU : baseURL_US;
     //usually just for testing
     if (!existsSync(`./savedData/${directory}`)) {
         mkdirSync(`./savedData/${directory}`);
@@ -35,7 +37,7 @@ async function main(creds, options, directory = "foo", isEU) {
     mkdirSync(`${dataPath}/downloaded`)
     mkdirSync(`${dataPath}/unzip`)
     mkdirSync(`${dataPath}/json`)
-    
+
     let auth = "Basic " + Buffer.from(creds.apiKey + ":" + creds.apiSecret).toString('base64')
     console.log('   calling /export amplitude api...')
     const response = await fetch(`${baseURL}?start=${options.start}&end=${options.end}`, {
@@ -55,24 +57,41 @@ async function main(creds, options, directory = "foo", isEU) {
     const fileSizeInBytes = stats.size;
     const fileSizeInMegabytes = fileSizeInBytes / 1000000.0;
 
-    //ungzip
+    //un zip
     console.log(`   unzipping data... (${fileSizeInMegabytes} MB)`)
     writePath = path.resolve(`${dataPath}/unzip`);
-    const zipped = new zip(`${dataPath}/downloaded/data.zip`);
-    var zipEntries = zipped.getEntries(); // an array of ZipEntry records
-
     let filesToUngzip = [];
-    zipEntries.forEach(function(zipEntry) {
-        if (zipEntry.entryName.includes('json')) {
-            filesToUngzip.push(zipEntry.entryName)
-            zipped.extractEntryTo(zipEntry.entryName, `${writePath}`, false, true);
 
-
+    try {        
+        execSync(`unzip -j ${escapeForShell(path.resolve(dataPath+"/downloaded/data.zip"))} -d ${escapeForShell(writePath)}`);
+        let allFiles = await readDirPromisified(writePath);
+        for (let file of allFiles) {
+            if (file.includes(".json.gz")) {
+                filesToUngzip.push(file)
+            }
+            
         }
-    });
-    filesToUngzip = filesToUngzip.map((name) => {
-        return name.split('/')[1]
-    })
+        console.log(`       unzipped ${smartCommas(filesToUngzip.length)} files\n\n`)     
+    } catch (e) {
+        console.log(`unzip is not available... trying adm-zip`)
+        const zipped = new zip(`${dataPath}/downloaded/data.zip`);
+        var zipEntries = zipped.getEntries(); // an array of ZipEntry records
+
+
+        zipEntries.forEach(function(zipEntry) {
+            if (zipEntry.entryName.includes('json')) {
+                filesToUngzip.push(zipEntry.entryName)
+                zipped.extractEntryTo(zipEntry.entryName, `${writePath}`, false, true);
+
+
+            }
+        });
+        filesToUngzip = filesToUngzip.map((name) => {
+            return name.split('/')[1]
+        })
+    }
+
+
 
 
 
@@ -106,6 +125,10 @@ async function main(creds, options, directory = "foo", isEU) {
 //utils
 function smartCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function escapeForShell(arg) {
+    return `'${arg.replace(/'/g, `'\\''`)}'`;
 }
 
 // main(credentials, options, 'foo');
