@@ -87,13 +87,13 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
                     return profile;
 
                 });
-            
+
             if (mpUserProfiles[0]) {
                 totalProfileEntries += mpUserProfiles.length;
                 profiles.push(mpUserProfiles[0])
             }
-            
-        //console.log(`       transforming user profiles... (${smartCommas(mpUserProfiles.length)} profiles)`);
+
+            //console.log(`       transforming user profiles... (${smartCommas(mpUserProfiles.length)} profiles)`);
 
 
 
@@ -203,26 +203,38 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
         }
 
         //writing files
+        
         //profiles
         writePath = path.resolve(`${dataPath}/profiles`);
         let profileFileName = path.resolve(`${writePath}/${fileNamePrefix.split('.')[0]}-profiles.json`)
-        await writeFilePromisified(profileFileName, JSON.stringify(profiles, null, 2));
+        try {
+            await writeFilePromisified(profileFileName, JSON.stringify(profiles));
+        } catch (e) {
+            await writeFilePromisified(profileFileName, stringifyHuge(profiles));
+        }
         transformedPaths.profiles.push(profileFileName);
 
         //events
         writePath = path.resolve(`${dataPath}/events`);
         let eventsFileName = path.resolve(`${writePath}/${fileNamePrefix.split('.')[0]}-events.json`)
-        await writeFilePromisified(eventsFileName, JSON.stringify(events, null, 2));
+        try {
+            await writeFilePromisified(eventsFileName, JSON.stringify(events));
+        } catch (e) {
+            await writeFilePromisified(eventsFileName, stringifyHuge(events));
+        }
         transformedPaths.events.push(eventsFileName);
 
 
         //mergeTables
         writePath = path.resolve(`${dataPath}/mergeTables`);
         let mergeTableFileName = path.resolve(`${writePath}/${fileNamePrefix.split('.')[0]}-mergeTable.json`)
-        await writeFilePromisified(mergeTableFileName, JSON.stringify(mergeTables, null, 2));
+        try {
+            await writeFilePromisified(mergeTableFileName, JSON.stringify(mergeTables));
+        } catch (e) {
+            await writeFilePromisified(mergeTableFileName, stringifyHuge(mergeTables));
+        }
         transformedPaths.mergeTables.push(mergeTableFileName);
-        console.log('\n')
-
+        //console.log('\n')
 
     }
 
@@ -233,6 +245,16 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
 
 function smartCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+// https://dev.to/madhunimmo/json-stringify-rangeerror-invalid-string-length-3977
+function stringifyHuge(hugeObject) {
+    var out = "[";
+    for (var indx = 0; indx < hugeObject.length - 1; indx++) {
+        out += JSON.stringify(hugeObject[indx], null, 4) + ",";
+    }
+    out += JSON.stringify(hugeObject[hugeObject.length - 1], null, 4) + "]";
+    return out;
 }
 
 
