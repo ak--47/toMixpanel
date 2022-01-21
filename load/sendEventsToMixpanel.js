@@ -73,12 +73,22 @@ async function main(credentials = {}, dataFile = ``, isEU, isAlreadyABatch = fal
     console.log(`       sending ${numberWithCommas(allData.length)} events in ${numberWithCommas(batches.length)} batches`);
     let numRecordsImported = 0;
     for (let eventBatch of compressed) {
+        try {
         let result = await sendDataToMixpanel(credentials, eventBatch);
         // console.log(`   done ✅`)
         // console.log(`   mixpanel response:`)
         // console.log(result);
-        //console.log('\n')
+        //console.log('\n')        
+        try {
         numRecordsImported += result.num_records_imported || 0;
+        }
+        catch (e) {
+            
+        }
+        }
+        catch (e) {
+
+        }
     }
 
     //FINISH
