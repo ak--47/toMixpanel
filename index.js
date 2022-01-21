@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// toMixpanel is your one-stop-shop ETL to get data from various sources... into Mixpanel!
+ // toMixpanel is your one-stop-shop ETL to get data from various sources... into Mixpanel!
 // by AK
 // ak@mixpanel.com
 
@@ -9,6 +9,7 @@ import { readFile } from 'fs/promises';
 import { promisify } from 'util'
 import * as path from 'path';
 import dayjs from 'dayjs';
+import { execSync } from 'child_process'
 
 //connectors
 import amplitudeETL from './connectors/amplitudeETL.js'
@@ -38,43 +39,67 @@ async function main() {
         process.exit(-1)
     }
     console.log(`found config @ ${configPath}\n`);
-    
+
     //create a root folder for everything
     const now = dayjs().format('YYYY-MM-DD HH.MM.ss.SSS A');
     let directoryName = `${config.source.name} ${now}`;
     try {
-        if(config.source.options.path_to_data) {
+        if (config.source.options.path_to_data) {
             directoryName = path.resolve(`./${config.source.options.path_to_data}`)
-        }        
-        else {
+        } else {
             mkdirSync(path.resolve(`./savedData/${directoryName}/`));
         }
     } catch (error) {
         mkdirSync(path.resolve(`./savedData/${directoryName}/`));
     }
-            
+
 
     //determine which etl to run
     switch (config.source.name.toLowerCase()) {
         case 'amplitude':
             console.log(`lets migrate data from ${config.source.name} to Mixpanel!\n\n`);
-            amplitudeETL(config, directoryName);
+            await amplitudeETL(config, directoryName);
+            cleanUp()
             break;
         case 'googleanalytics':
             console.log(`lets migrate data from ${config.source.name} to Mixpanel!\n\n`);
-            googleAnalyticsETL(config, directoryName);
-            // code block
+            await googleAnalyticsETL(config, directoryName);
+            cleanUp()
             break;
         case 'csv':
             console.log(`lets migrate ${config.source.name} data to Mixpanel!\n\n`);
-            csvETL(config, directoryName)
+            await csvETL(config, directoryName)
+            cleanUp()
             break;
         default:
             console.log('could not determine data source')
     }
 
-    //if save local copy is disabled, remove saved files
+    function cleanUp() {
+        //if save local copy is disabled, remove saved files
+        if (!config.source.options.save_local_copy) {
+            console.log(`\ndeleting temp data\n`)
+            execSync(`rm -rf ${escapeForShell(path.resolve(`./savedData/${directoryName}`))}`);
+        }
+    
+        else {
+            console.log(`\nall data has been saved locally in ${path.resolve(directoryName)}
+            you can run 'npm run prune' to delete the data if you don't need it anymore
+            `)
+        }
+
+        console.log(`you can now see your data in mixpanel!\nhttps://mixpanel.com/project/${config.destination.project_id}/`)
+
+        process.exit()
+    
+    }
+    
+    function escapeForShell(arg) {
+        return `'${arg.replace(/'/g, `'\\''`)}'`;
+    }
 
 }
 
 main()
+
+

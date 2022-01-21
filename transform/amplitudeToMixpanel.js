@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import * as path from 'path';
 import md5 from 'md5';
 import * as readline from 'readline'
+import _ from 'lodash';
 
 const readFilePromisified = promisify(readFile);
 const writeFilePromisified = promisify(writeFile);
@@ -228,10 +229,18 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
         //mergeTables
         writePath = path.resolve(`${dataPath}/mergeTables`);
         let mergeTableFileName = path.resolve(`${writePath}/${fileNamePrefix.split('.')[0]}-mergeTable.json`)
+        //try to dedupe merge tables
+        let finalMergeTables;
         try {
-            await writeFilePromisified(mergeTableFileName, JSON.stringify(mergeTables));
+            finalMergeTables = _.uniqWith(mergeTables, _.isEqual)
+        }
+        catch (e) {
+            finalMergeTables = mergeTables
+        }
+        try {
+            await writeFilePromisified(mergeTableFileName, JSON.stringify(finalMergeTables));
         } catch (e) {
-            await writeFilePromisified(mergeTableFileName, stringifyHuge(mergeTables));
+            await writeFilePromisified(mergeTableFileName, stringifyHuge(finalMergeTables));
         }
         transformedPaths.mergeTables.push(mergeTableFileName);
         //console.log('\n')

@@ -69,15 +69,9 @@ async function amplitudeETL(config, directoryName) {
     console.log(`
     ${smartCommas(totalEventsImported)} events imported
     ${smartCommas(totalMergeTables)} users merged
-    ${smartCommas(totalUsersImported)} profiles updated
+    ${smartCommas(totalUsersImported)} profiles updated`)
+        
 
-    all data has been saved locally in ${path.resolve(directoryName)}
-    you can rune 'npm run prune' to delete the data
-    `)
-
-    console.log(`you can now see your data in mixpanel!\nhttps://mixpanel.com/project/${config.destination.project_id}/`)
-
-    process.exit(1)
 
 }
 

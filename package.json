@@ -21,6 +21,7 @@
     "dotenv": "^10.0.0",
     "is-gzip": "^2.0.0",
     "jsonschema": "^1.4.0",
+    "lodash": "^4.17.21",
     "md5": "^2.3.0",
     "node-fetch": "^3.0.0",
     "node-gzip": "^1.1.2",
