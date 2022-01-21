@@ -83,8 +83,7 @@ async function main() {
         }
     
         else {
-            console.log(`\nall data has been saved locally in ${path.resolve(directoryName)}
-            you can run 'npm run prune' to delete the data if you don't need it anymore
+            console.log(`\nall data has been saved locally in ${path.resolve(directoryName)}\nyou can run 'npm run prune' to delete the data if you don't need it anymore
             `)
         }
 
