@@ -232,10 +232,10 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
         //try to dedupe merge tables
         let finalMergeTables;
         try {
-            finalMergeTables = _.uniqWith(mergeTables, _.isEqual)
+            finalMergeTables = _.uniqWith(mergeTables, _.isEqual).filter(a => a)
         }
         catch (e) {
-            finalMergeTables = mergeTables
+            finalMergeTables = mergeTables.filter(a => a)
         }
         try {
             await writeFilePromisified(mergeTableFileName, JSON.stringify(finalMergeTables));

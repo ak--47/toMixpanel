@@ -7,6 +7,7 @@ import fetch from 'node-fetch';
 import { default as zip } from 'adm-zip';
 import { default as gun } from 'node-gzip';
 import { execSync } from 'child_process'
+import dayjs from 'dayjs';
 
 
 
@@ -39,7 +40,7 @@ async function main(creds, options, directory = "foo", isEU) {
     mkdirSync(`${dataPath}/json`)
 
     let auth = "Basic " + Buffer.from(creds.apiKey + ":" + creds.apiSecret).toString('base64')
-    console.log('   calling /export amplitude api...')
+    console.log(`   calling /export amplitude api for ${dayjs(options.start).format('MM-DD-YYYY')} - ${dayjs(options.end).format('MM-DD-YYYY')}...`)
     const response = await fetch(`${baseURL}?start=${options.start}&end=${options.end}`, {
         headers: {
             "Authorization": auth
@@ -47,7 +48,10 @@ async function main(creds, options, directory = "foo", isEU) {
 
     });
 
-    if (!response.ok) throw new Error(`unexpected response ${response.statusText}`);
+    if (!response.ok) {
+        console.log(`AMP API ERROR: ${response.status} ${response.statusText}`)
+        return false;
+    } 
 
     //download archive
     console.log('   downloading data...');

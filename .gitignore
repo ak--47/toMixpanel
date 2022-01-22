@@ -4,6 +4,7 @@ savedData/*
 sampleData/*
 customerData/*
 dev/*
+log.txt
 
 #env
 .env

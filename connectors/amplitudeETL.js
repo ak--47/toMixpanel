@@ -23,7 +23,9 @@ async function amplitudeETL(config, directoryName) {
 
     console.log('EXTRACT!\n')
     let extractedData = await amplitudeExtract(credentials, dates, directoryName, config.source.options['is EU?']);
-
+    if (!extractedData) {
+        return false;
+    }
     console.log('TRANSFORM!\n')
     let transformedData = await amplitudeTransform(extractedData, `./savedData/${directoryName}`, config.destination.token);
 

@@ -159,14 +159,7 @@ async function main(config, directoryName) {
     console.log(`\nSUMMARY:`)
     console.log(`
     ${smartCommas(totalEventsImported)} events imported
-    ${smartCommas(totalUsersImported)} profiles updated
-
-    all data has been saved locally in ${path.resolve(directoryName)}
-    you can rune 'npm run prune' to delete the data
-    `)
-
-    console.log(`you can now see your data in mixpanel!\nhttps://mixpanel.com/project/${config.destination.project_id}/`)
-    process.exit()
+    ${smartCommas(totalUsersImported)} profiles updated`)    
 
 }
 
