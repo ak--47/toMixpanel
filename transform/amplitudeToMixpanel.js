@@ -181,7 +181,7 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
 
                 //pair user_id & amplitude_id
                 if (ampEvent.user_id && ampEvent.amplitude_id) {
-                    mergeTable.push({
+                    let mergePair = {
                         "event": "$merge",
                         "properties": {
                             "$distinct_ids": [
@@ -189,7 +189,10 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
                                 ampEvent.amplitude_id.toString()
                             ]
                         }
-                    })
+                    }
+                    let hash = md5(JSON.stringify(mergePair));
+                    mergePair.properties.$insert_id = hash;
+                    mergeTable.push(mergePair)
                 };
 
             }
@@ -204,7 +207,7 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
         }
 
         //writing files
-        
+
         //profiles
         writePath = path.resolve(`${dataPath}/profiles`);
         let profileFileName = path.resolve(`${writePath}/${fileNamePrefix.split('.')[0]}-profiles.json`)
@@ -233,8 +236,7 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
         let finalMergeTables;
         try {
             finalMergeTables = _.uniqWith(mergeTables, _.isEqual).filter(a => a)
-        }
-        catch (e) {
+        } catch (e) {
             finalMergeTables = mergeTables.filter(a => a)
         }
         try {

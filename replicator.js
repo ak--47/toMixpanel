@@ -24,6 +24,9 @@ have fun!
 
 */
 
+// note: every 4 lines "wait"
+// note: GNU parallels
+
 import dayjs from 'dayjs';
 import { writeFile, readFile } from 'fs/promises';
 import { existsSync, mkdirSync } from 'fs'
@@ -44,7 +47,7 @@ async function main() {
 	let numOfConfigsNeeded = Math.ceil(fullDateDelta/dayChunks);
 	
 	let lastStart = start;
-	let shellScript = `#!/usr/bin/env\nrm log.txt;\ntouch log.txt;\n`;
+	let shellScript = `#!/usr/bin/env\nrm -rf ./logs/*\n`;
 	createConfigs: for (let iterator = 0; iterator < numOfConfigsNeeded; iterator++) {
 		let tempConfig = Object.assign({}, userConfig);
 		tempConfig.source.params.start_date = lastStart.format('YYYY-MM-DD');
@@ -52,13 +55,21 @@ async function main() {
 		tempConfig.source.params.end_date = newEnd.format('YYYY-MM-DD');
 		lastStart = newEnd.add(1, 'd');
 		let newFileName = `${configPath.split('/').slice().pop().split('.json')[0]}-${iterator}.json`
-		shellScript += `node index.js ${path.resolve(`${pathToWrite}/${newFileName}`)} | tee -a log.txt;\n`
+		if (iterator % 4 === 0 && iterator !== 0) {
+			shellScript += `wait\n`
+		}
+		shellScript += `node index.js ${path.resolve(`${pathToWrite}/${newFileName}`)} | tee -a ${path.resolve(`./logs/log-${newFileName}`)}.txt &\n`
+		
 		await writeFile(path.resolve(`${pathToWrite}/${newFileName}`), JSON.stringify(tempConfig, null, 2));
 		
 		
 	}
 
-	let finalShellScript = shellScript.trim().slice(0,-1);
+	let finalShellScript = shellScript.trim()
+	if (!finalShellScript.endsWith('wait')) {
+		finalShellScript += `\nwait`
+	}
+	
 	await writeFile(path.resolve(`${pathToWrite}/runAll.sh`), finalShellScript);
 	console.log(`	created ${numOfConfigsNeeded} config files @ ${pathToWrite}/`)
 	console.log(`\nyou can now use the generated bash script to run the entire import like this:`)

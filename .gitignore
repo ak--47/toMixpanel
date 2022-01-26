@@ -1,10 +1,13 @@
 #tempFolders
 savedData/*
 !savedData/.gitkeep 
+logs/*
+!logs/.gitkeep
 sampleData/*
 customerData/*
 dev/*
 log.txt
+
 
 #env
 .env

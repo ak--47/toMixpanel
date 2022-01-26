@@ -42,7 +42,8 @@ async function main() {
 
     //create a root folder for everything
     const now = dayjs().format('YYYY-MM-DD HH.MM.ss.SSS A');
-    let directoryName = `${config.source.name} ${now}`;
+    const randomNum = getRandomInt(42);
+    let directoryName = `${config.source.name} ${now} ${randomNum}`;
     try {
         if (config.source.options.path_to_data) {
             directoryName = path.resolve(`./${config.source.options.path_to_data}`)
@@ -93,9 +94,14 @@ async function main() {
     
     }
     
+    //utils
     function escapeForShell(arg) {
         return `'${arg.replace(/'/g, `'\\''`)}'`;
     }
+
+    function getRandomInt(max) {
+        return Math.floor(Math.random() * max);
+      }
 
 }
 
