@@ -24,8 +24,7 @@ have fun!
 
 */
 
-// note: every 4 lines "wait"
-// note: GNU parallels
+const PARALLELISM = 4
 
 import dayjs from 'dayjs';
 import { writeFile, readFile } from 'fs/promises';
@@ -55,7 +54,7 @@ async function main() {
 		tempConfig.source.params.end_date = newEnd.format('YYYY-MM-DD');
 		lastStart = newEnd.add(1, 'd');
 		let newFileName = `${configPath.split('/').slice().pop().split('.json')[0]}-${iterator}.json`
-		if (iterator % 4 === 0 && iterator !== 0) {
+		if (iterator % PARALLELISM === 0 && iterator !== 0) {
 			shellScript += `wait\n`
 		}
 		shellScript += `node index.js ${path.resolve(`${pathToWrite}/${newFileName}`)} | tee -a ${path.resolve(`./logs/log-${newFileName}`)}.txt &\n`

@@ -16,6 +16,9 @@ import amplitudeETL from './connectors/amplitudeETL.js'
 import googleAnalyticsETL from './connectors/googleAnalyticsETL.js'
 import csvETL from './connectors/csvETL.js'
 
+//global now!
+global.nowTime = Date.now();
+
 
 async function main() {
     console.log('\nstarting up!\n')
@@ -42,7 +45,7 @@ async function main() {
 
     //create a root folder for everything
     const now = dayjs().format('YYYY-MM-DD HH.MM.ss.SSS A');
-    const randomNum = getRandomInt(42);
+    const randomNum = getRandomInt(420);
     let directoryName = `${config.source.name} ${now} ${randomNum}`;
     try {
         if (config.source.options.path_to_data) {

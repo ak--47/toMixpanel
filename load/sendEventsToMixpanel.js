@@ -155,7 +155,7 @@ async function main(credentials = {}, dataFile = ``, isEU, isAlreadyABatch = fal
         try {
             let req = await fetch(url, options);
             let res = await req.json();
-            console.log(`           ${JSON.stringify(res)}`)
+            //console.log(`           ${JSON.stringify(res)}`)
             return res;
 
         } catch (e) {

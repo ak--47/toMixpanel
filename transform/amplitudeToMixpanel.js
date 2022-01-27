@@ -192,6 +192,7 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
                     }
                     let hash = md5(JSON.stringify(mergePair));
                     mergePair.properties.$insert_id = hash;
+                    mergePair.properties.time = nowTime;
                     mergeTable.push(mergePair)
                 };
 
