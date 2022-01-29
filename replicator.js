@@ -24,7 +24,9 @@ have fun!
 
 */
 
-const PARALLELISM = 4
+//todo: https://www.msi.umn.edu/support/faq/how-can-i-use-gnu-parallel-run-lot-commands-parallel
+
+const PARALLELISM = 5
 
 import dayjs from 'dayjs';
 import { writeFile, readFile } from 'fs/promises';
@@ -47,6 +49,7 @@ async function main() {
 	
 	let lastStart = start;
 	let shellScript = `#!/usr/bin/env\nrm -rf ./logs/*\n`;
+	let parallelsScript = ``
 	createConfigs: for (let iterator = 0; iterator < numOfConfigsNeeded; iterator++) {
 		let tempConfig = Object.assign({}, userConfig);
 		tempConfig.source.params.start_date = lastStart.format('YYYY-MM-DD');
@@ -58,7 +61,7 @@ async function main() {
 			shellScript += `wait\n`
 		}
 		shellScript += `node index.js ${path.resolve(`${pathToWrite}/${newFileName}`)} | tee -a ${path.resolve(`./logs/log-${newFileName}`)}.txt &\n`
-		
+		parallelsScript += `node index.js ${path.resolve(`${pathToWrite}/${newFileName}`)} | tee -a ${path.resolve(`./logs/log-${newFileName}`)}.txt\n`
 		await writeFile(path.resolve(`${pathToWrite}/${newFileName}`), JSON.stringify(tempConfig, null, 2));
 		
 		
@@ -68,11 +71,16 @@ async function main() {
 	if (!finalShellScript.endsWith('wait')) {
 		finalShellScript += `\nwait`
 	}
+
+	let finalParallelsScript = parallelsScript.trim();
 	
 	await writeFile(path.resolve(`${pathToWrite}/runAll.sh`), finalShellScript);
-	console.log(`	created ${numOfConfigsNeeded} config files @ ${pathToWrite}/`)
-	console.log(`\nyou can now use the generated bash script to run the entire import like this:`)
-	console.log(`sh ${path.resolve(`${pathToWrite}/runAll.sh`)}`)
+	await writeFile(path.resolve(`${pathToWrite}/commands.txt`), finalParallelsScript);
+	console.log(`	created ${numOfConfigsNeeded} config files @ ${pathToWrite}/`);
+	console.log(`\nyou can now use the generated bash script to run the entire import like this:`);
+	console.log(`sh ${path.resolve(`${pathToWrite}/runAll.sh\n`)}`);
+	console.log(`if 'parallel' is available, you may also do:`);
+	console.log(`parallel --jobs 5 < ${path.resolve(`${pathToWrite}/commands.txt`)}`);
 
 
 }
