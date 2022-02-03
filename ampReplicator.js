@@ -57,8 +57,8 @@ async function main() {
 		if (iterator % PARALLELISM === 0 && iterator !== 0) {
 			shellScript += `wait\n`
 		}
-		shellScript += `node index.js ${path.resolve(`${pathToWrite}/${newFileName}`)} | tee -a ${path.resolve(`./logs/log-${newFileName}`)}.txt &\n`
-		parallelsScript += `node index.js ${path.resolve(`${pathToWrite}/${newFileName}`)} | tee -a ${path.resolve(`./logs/log-${newFileName}`)}.txt\n`
+		shellScript += `node index.js ${escapeForShell(path.resolve(`${pathToWrite}/${newFileName}`))} | tee -a ${path.resolve(`./logs/log-${newFileName}`)}.txt &\n`
+		parallelsScript += `node index.js ${escapeForShell(path.resolve(`${pathToWrite}/${newFileName}`))} > ${path.resolve(`./logs/log-${newFileName}`)}.txt\n`
 		await writeFile(path.resolve(`${pathToWrite}/${newFileName}`), JSON.stringify(tempConfig, null, 2));
 		
 		
@@ -82,5 +82,8 @@ async function main() {
 
 }
 
+function escapeForShell(arg) {
+	return `'${arg.replace(/'/g, `'\\''`)}'`;
+}
 
 main();
