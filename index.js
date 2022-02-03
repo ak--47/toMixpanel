@@ -57,6 +57,8 @@ async function main() {
         mkdirSync(path.resolve(`./savedData/${directoryName}/`));
     }
 
+    console.log(`data dir is:`);
+    console.log(path.resolve(`./savedData/${directoryName}/\n`));
 
     //determine which etl to run
     switch (config.source.name.toLowerCase()) {

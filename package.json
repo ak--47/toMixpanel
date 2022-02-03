@@ -17,6 +17,7 @@
   "dependencies": {
     "@google-cloud/storage": "^5.15.6",
     "adm-zip": "^0.5.6",
+    "big-json": "^3.1.0",
     "dayjs": "^1.10.7",
     "dotenv": "^10.0.0",
     "is-gzip": "^2.0.0",

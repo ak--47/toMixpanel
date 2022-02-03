@@ -15,11 +15,14 @@ async function amplitudeETL(config, directoryName) {
         apiSecret: config.source.params.api_secret
     }
 
+    let {start_date, end_date} = config.source.params;
+    //co-erce the dates to amp format
     let dates = {
-        //co-erce the dates to amp format
-        start: `${dayjs(config.source.params.start_date).format('YYYYMMDD')}T00`,
-        end: `${dayjs(config.source.params.end_date).format('YYYYMMDD')}T23`
+        start: dayjs(start_date).format('YYYYMMDDTHH'),
+        end: dayjs(end_date).format('YYYYMMDDTHH')
     }
+    
+            
 
     console.log('EXTRACT!\n')
     let extractedData = await amplitudeExtract(credentials, dates, directoryName, config.source.options['is EU?']);

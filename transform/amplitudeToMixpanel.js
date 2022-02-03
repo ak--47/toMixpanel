@@ -6,6 +6,7 @@ import * as path from 'path';
 import md5 from 'md5';
 import * as readline from 'readline'
 import _ from 'lodash';
+import * as bigjson from 'big-json';
 
 const readFilePromisified = promisify(readFile);
 const writeFilePromisified = promisify(writeFile);
@@ -34,7 +35,7 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
 
 
     //walk each file    
-    for (let filePath of listOfFilePaths) {
+    fileWalk: for (let filePath of listOfFilePaths) {
         let fileNamePrefix = filePath.split('/').pop();
         console.log(`   processing ${fileNamePrefix}`)
         const instream = createReadStream(filePath);
@@ -211,21 +212,41 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
 
         //profiles
         writePath = path.resolve(`${dataPath}/profiles`);
-        let profileFileName = path.resolve(`${writePath}/${fileNamePrefix.split('.')[0]}-profiles.json`)
+        let profileFileName = path.resolve(`${writePath}/${fileNamePrefix.split('.')[0]}-profiles.json`);
         try {
             await writeFilePromisified(profileFileName, JSON.stringify(profiles));
         } catch (e) {
-            await writeFilePromisified(profileFileName, stringifyHuge(profiles));
+            try {
+                await writeFilePromisified(profileFileName, stringifyHuge(profiles));
+            } catch (e) {
+                try {
+                    await writeToFile(profileFileName, profiles)
+                } catch (e) {
+                    console.log(`ERROR: could not write JSON`);
+                    console.log(e)
+                    continue fileWalk;
+                }
+            }
         }
         transformedPaths.profiles.push(profileFileName);
 
         //events
         writePath = path.resolve(`${dataPath}/events`);
-        let eventsFileName = path.resolve(`${writePath}/${fileNamePrefix.split('.')[0]}-events.json`)
+        let eventsFileName = path.resolve(`${writePath}/${fileNamePrefix.split('.')[0]}-events.json`);
         try {
             await writeFilePromisified(eventsFileName, JSON.stringify(events));
         } catch (e) {
-            await writeFilePromisified(eventsFileName, stringifyHuge(events));
+            try {
+                await writeFilePromisified(eventsFileName, stringifyHuge(events));
+            } catch (e) {
+                try {
+                    await writeToFile(eventsFileName, events);
+                } catch (e) {
+                    console.log(`ERROR: could not write JSON`);
+                    console.log(e)
+                    continue fileWalk;
+                }
+            }
         }
         transformedPaths.events.push(eventsFileName);
 
@@ -240,10 +261,21 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
         } catch (e) {
             finalMergeTables = mergeTables.filter(a => a)
         }
+
         try {
             await writeFilePromisified(mergeTableFileName, JSON.stringify(finalMergeTables));
         } catch (e) {
-            await writeFilePromisified(mergeTableFileName, stringifyHuge(finalMergeTables));
+            try {
+                await writeFilePromisified(mergeTableFileName, stringifyHuge(finalMergeTables));
+            } catch (e) {
+                try {
+                    await writeToFile(mergeTableFileName, finalMergeTables);
+                } catch (e) {
+                    console.log(`ERROR: could not write JSON`);
+                    console.log(e)
+                    continue fileWalk;
+                }
+            }
         }
         transformedPaths.mergeTables.push(mergeTableFileName);
         //console.log('\n')
@@ -269,5 +301,25 @@ function stringifyHuge(hugeObject) {
     return out;
 }
 
+async function writeToFile(filename, data) {
+    return new Promise((resolve, reject) => {
+        let file = createWriteStream(filename);
+        const stringifyStream = bigjson.createStringifyStream({
+            body: data
+        });
+
+        stringifyStream.on('data', function(strChunk) {
+            file.write(strChunk);
+        });
+
+        stringifyStream.on('end', function() {
+            file.end();
+        });
+
+        file.on("finish", () => { resolve(true); });
+        file.on("error", reject);
+
+    })
+}
 
 export default main;

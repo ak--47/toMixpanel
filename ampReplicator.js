@@ -6,14 +6,12 @@ for large sets of data, you will need to break a large date range into a smaller
 this script is a one-off utility to do exactly that... 
 
 usage:
-node replicator.js ./pathToConfig --chunk N ./pathToWrite
+node ampReplicator.js ./pathToConfig ./pathToWrite
 
 where: 
 ./pathToConfig is a config with the full range of dates you need
 
---chunk N is the number of days in each export
-
-./pathToWrite will create copies of the config with smaller date ranges
+./pathToWrite will create copies of the config with smaller date ranges (hourly)
 
 these configs can be run serially to finish a large import....
 
@@ -38,24 +36,23 @@ async function main() {
     console.log('\nstarting replicator!\n')
     let cliArgs = process.argv;
     let configPath = path.resolve(cliArgs[2])
-	let pathToWrite = path.resolve(cliArgs[5])
-	let dayChunks = Number(cliArgs[4]) - 1   
+	let pathToWrite = path.resolve(cliArgs[3])	
     const userConfig = JSON.parse(await readFile(configPath))    
     console.log(`	found config @ ${configPath}\n`);
 	let start = dayjs(userConfig.source.params.start_date);
 	let end = dayjs(userConfig.source.params.end_date);
-	let fullDateDelta = end.diff(start, 'd');
-	let numOfConfigsNeeded = Math.ceil(fullDateDelta/dayChunks);
+	let fullDateDelta = end.diff(start, 'd') * 24;
+	let numOfConfigsNeeded = Math.ceil(fullDateDelta)
 	
 	let lastStart = start;
 	let shellScript = `#!/usr/bin/env\nrm -rf ./logs/*\n`;
 	let parallelsScript = ``
 	createConfigs: for (let iterator = 0; iterator < numOfConfigsNeeded; iterator++) {
 		let tempConfig = Object.assign({}, userConfig);
-		tempConfig.source.params.start_date = lastStart.format('YYYY-MM-DD');
-		let newEnd = lastStart.add(dayChunks, 'd');
-		tempConfig.source.params.end_date = newEnd.format('YYYY-MM-DD');
-		lastStart = newEnd.add(1, 'd');
+		tempConfig.source.params.start_date = lastStart.format('YYYY-MM-DDTHH');
+		let newEnd = lastStart.add(1, 'h');
+		tempConfig.source.params.end_date = newEnd.format('YYYY-MM-DDTHH');
+		lastStart = newEnd.add(1, 'h');
 		let newFileName = `${configPath.split('/').slice().pop().split('.json')[0]}-${iterator}.json`
 		if (iterator % PARALLELISM === 0 && iterator !== 0) {
 			shellScript += `wait\n`
