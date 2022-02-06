@@ -48,6 +48,7 @@ async function main(credentials = {}, dataFile = ``, isEU, isAlreadyABatch = fal
                 //if we don't have JSON or NDJSON... fail...
                 console.log('failed to parse data... only valid JSON or NDJSON is supported by this script')
                 console.log(e)
+                return 0;
             }
         }
 
