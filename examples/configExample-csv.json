@@ -10,7 +10,8 @@
         },
         "options" : {
             "ignore_cols": ["favoriteColor"],
-            "save_local_copy": true 
+            "save_local_copy": false,
+            "create_profiles": true
         }
     },
     "destination": {

@@ -75,7 +75,7 @@ async function main(config, directoryName) {
             event[cols.time_col] = dayjs(event[cols.time_col]).unix();
 
             //ignore cols
-            if (config.source.options.ignore_cols.length >= 1) {
+            if (config.source.options?.ignore_cols?.length >= 1) {
                 for (let header of config.source.options.ignore_cols) {
                     delete event[header];
                 }
@@ -102,7 +102,7 @@ async function main(config, directoryName) {
             events.push(transformedEvent);
 
             //do profiles
-            if (config.source.options.create_profiles) {
+            if (config.source.options?.create_profiles) {
                 let profile = {
                     "$token": config.destination.token,
                     "$distinct_id": transformedEvent.properties.distinct_id,
