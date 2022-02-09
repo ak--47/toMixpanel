@@ -3,6 +3,7 @@
         "name": "csv",
         "params": {
             "filePath": "./sampleData/sampleEvents.csv",
+            "event_name_col": "action",
             "distinct_id_col": "guid",
             "time_col" : "time",
             "insert_id_col": "insert_id"
