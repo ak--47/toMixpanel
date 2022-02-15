@@ -15,6 +15,7 @@ import { execSync } from 'child_process'
 import amplitudeETL from './connectors/amplitudeETL.js'
 import googleAnalyticsETL from './connectors/googleAnalyticsETL.js'
 import csvETL from './connectors/csvETL.js'
+import mixpanelETL from './connectors/mixpanelETL.js'
 
 //global now!
 global.nowTime = Date.now();
@@ -46,7 +47,7 @@ async function main() {
     //create a root folder for everything
     const now = dayjs().format('YYYY-MM-DD HH.MM.ss.SSS A');
     const randomNum = getRandomInt(420);
-    let directoryName = `${config.source.name} ${now} ${randomNum}`;
+    let directoryName = `${config.source.name} to ${now} ${randomNum}`;
     try {
         if (config.source.options.path_to_data) {
             directoryName = path.resolve(`./${config.source.options.path_to_data}`)
@@ -74,9 +75,13 @@ async function main() {
             break;
         case 'csv':
             console.log(`lets migrate ${config.source.name} data to Mixpanel!\n\n`);
-            await csvETL(config, directoryName)
+            await csvETL(config, directoryName);
             cleanUp()
             break;
+        case 'mixpanel':
+            console.log(`lets migrate ${config.source.name} data ... to mixpanel!`)
+            await mixpanelETL(config, directoryName);
+            cleanUp();
         default:
             console.log('could not determine data source')
     }

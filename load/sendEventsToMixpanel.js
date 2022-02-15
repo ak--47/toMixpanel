@@ -4,6 +4,7 @@
 
 import { readFile } from 'fs';
 import { promisify } from 'util';
+import {readFile as read} from 'fs/promises'
 import fetch from 'node-fetch'; //https://www.npmjs.com/package/node-fetch
 import md5 from 'md5'; //https://www.npmjs.com/package/md5
 import isGzip from 'is-gzip'; //https://www.npmjs.com/package/is-gzip
@@ -28,7 +29,7 @@ async function main(credentials = {}, dataFile = ``, isEU, isAlreadyABatch = fal
         allData = dataFile
     } else {
         //LOAD data files
-        let file = await readFilePromisified(dataFile).catch((e) => {
+        let file = await read(dataFile, "utf-8").catch((e) => {
             console.error(`failed to load ${dataFile}... does it exist?\n`);
             console.log(`if you require some test data, try 'npm run generate' first...`);
             process.exit(1);
@@ -43,7 +44,7 @@ async function main(credentials = {}, dataFile = ``, isEU, isAlreadyABatch = fal
         } catch (e) {
             //it's probably NDJSON, so iterate over each line
             try {
-                allData = file.split('\n').map(line => JSON.parse(line));
+                allData = file.trim().split('\n').map(line => JSON.parse(line));
             } catch (e) {
                 //if we don't have JSON or NDJSON... fail...
                 console.log('failed to parse data... only valid JSON or NDJSON is supported by this script')

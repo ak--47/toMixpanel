@@ -8,7 +8,8 @@
     "prune": "rm -rf ./savedData/* ./logs/*",
     "amplitude": "npm run prune && node --inspect --max_old_space_size=8192 ./index.js ./dev/configAMP.json",
     "ga360": "npm run prune && node --inspect --max_old_space_size=8192 ./index.js ./dev/configGA360.json",
-    "csv": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configCSV.json"
+    "csv": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configCSV.json",
+    "mixpanel": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configMP.json"
   },
   "type": "module",
   "keywords": [],
