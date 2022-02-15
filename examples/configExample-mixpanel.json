@@ -1,0 +1,29 @@
+{
+    "source": {
+        "name": "mixpanel",
+        "params": {
+            "token": "{{ your mixpanel token }}",
+            "secret": "{{ your mixpanel secret}}",
+            "start_date" : "2022-02-11",
+            "end_date": "2022-02-14"
+        },
+        "options" : {
+            "save_local_copy": false,
+            "is EU?": false,
+            "doPeople": true,
+            "doEvents": true,
+            "where": "defined(properties[\"$source\"])",
+            "event": ["like"]
+        }
+    },
+    "destination": {
+        "name": "mixpanel",
+        "project_id": "{{ your new mixpanel project}}", 
+        "token": "{{ your new mixpanel token }}",
+        "service_account_user": "{{ new project service account }}",
+        "service_account_pass": "{{ new project service secret }}",
+        "options": {
+            "is EU?" : false
+        }
+    }
+}
