@@ -22,6 +22,7 @@ global.nowTime = Date.now();
 
 
 async function main() {
+    console.time("main");
     console.log('\nstarting up!\n')
     //figure out where config is
     let cliArgs = process.argv;
@@ -47,7 +48,7 @@ async function main() {
     //create a root folder for everything
     const now = dayjs().format('YYYY-MM-DD HH.MM.ss.SSS A');
     const randomNum = getRandomInt(420);
-    let directoryName = `${config.source.name} to ${now} ${randomNum}`;
+    let directoryName = `${config.source.name} ${now} ${randomNum}`;
     try {
         if (config.source.options.path_to_data) {
             directoryName = path.resolve(`./${config.source.options.path_to_data}`)
@@ -91,19 +92,19 @@ async function main() {
         if (!config.source.options.save_local_copy) {
             console.log(`\ndeleting temp data\n`)
             execSync(`rm -rf ${escapeForShell(path.resolve(`./savedData/${directoryName}`))}`);
-        }
-    
-        else {
+        } else {
             console.log(`\nall data has been saved locally in ${path.resolve(directoryName)}\nyou can run 'npm run prune' to delete the data if you don't need it anymore
             `)
         }
 
         console.log(`you can now see your data in mixpanel!\nhttps://mixpanel.com/project/${config.destination.project_id}/`)
-
+        console.log('\n')
+        console.metrics();
+        console.timeEnd("main")
         process.exit()
-    
+
     }
-    
+
     //utils
     function escapeForShell(arg) {
         return `'${arg.replace(/'/g, `'\\''`)}'`;
@@ -111,10 +112,15 @@ async function main() {
 
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
-      }
+    }
 
 }
 
+console.metrics = function() {
+    const used = process.memoryUsage();
+    for (let key in used) {
+        console.log(`Memory: ${key} ${Math.round(used[key] / 1024 / 1024 * 100) / 100} MB`);
+    }
+}
+
 main()
-
-

@@ -9,7 +9,7 @@
     "amplitude": "npm run prune && node --inspect --max_old_space_size=8192 ./index.js ./dev/configAMP.json",
     "ga360": "npm run prune && node --inspect --max_old_space_size=8192 ./index.js ./dev/configGA360.json",
     "csv": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configCSV.json",
-    "mixpanel": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configMP.json"
+    "mixpanel": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configMP.json | tee -a ./logs/mp-log.txt"
   },
   "type": "module",
   "keywords": [],
@@ -27,6 +27,7 @@
     "md5": "^2.3.0",
     "node-fetch": "^3.0.0",
     "node-gzip": "^1.1.2",
-    "papaparse": "^5.3.1"
+    "papaparse": "^5.3.1",
+    "throttled-queue": "^2.1.2"
   }
 }
