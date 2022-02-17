@@ -9,7 +9,8 @@
     "amplitude": "npm run prune && node --inspect --max_old_space_size=8192 ./index.js ./dev/configAMP.json",
     "ga360": "npm run prune && node --inspect --max_old_space_size=8192 ./index.js ./dev/configGA360.json",
     "csv": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configCSV.json",
-    "mixpanel": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configMP.json | tee -a ./logs/mp-log.txt"
+    "mixpanel": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configMP.json | tee -a ./logs/mp-log.txt",
+    "dev": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configDev.json | tee -a ./logs/mp-log.txt"
   },
   "type": "module",
   "keywords": [],
@@ -18,6 +19,7 @@
   "dependencies": {
     "@google-cloud/storage": "^5.15.6",
     "adm-zip": "^0.5.6",
+    "axios": "^0.26.0",
     "big-json": "^3.1.0",
     "dayjs": "^1.10.7",
     "dotenv": "^10.0.0",

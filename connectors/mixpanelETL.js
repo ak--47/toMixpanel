@@ -6,6 +6,7 @@ import * as path from 'path';
 import sendEventsToMixpanel from '../load/sendEventsToMixpanel.js'
 import sendProfilesToMixpanel from '../load/sendProfilesToMixpanel.js'
 import throttledQueue from 'throttled-queue';
+import sendOther from '../load/sendOther.js'
 
 
 const ENDPOINT_URL_US_EVENTS = `https://data.mixpanel.com/api/2.0/export`
@@ -86,7 +87,12 @@ async function mixpanelETL(config, directoryName) {
                 console.log(`   hitting /export for ${start} to ${end}`)
                 let curlForData = `curl --request GET --url '${ENDPOINT_URL_EVENTS}?${queryString}' --header 'Accept: text/plain' --header 'Authorization: ${auth}' --output ${escapeForShell(file)}`
                 let fetchData = execSync(curlForData);
-                eventsImported += await sendEventsToMixpanel(mixpanelCreds, file, config.destination?.options['is EU?']);
+                if (config.destination.name.toLowerCase() !== 'mixpanel') {
+                    eventsImported += await sendOther(config.destination.name.toLowerCase(), config, file, `event`)
+                } else {
+                    eventsImported += await sendEventsToMixpanel(mixpanelCreds, file, config.destination?.options['is EU?']);
+                }
+
                 if (!config.source?.options?.save_local_copy) {
                     console.log(`   deleting ${fileName}`)
                     execSync(`rm ${escapeForShell(file)}`)
@@ -146,9 +152,16 @@ async function mixpanelETL(config, directoryName) {
                     }
                 });
 
-                await writeFile(file, JSON.stringify(peopleData, null, 2))
-                peopleImported += await sendProfilesToMixpanel(file, config.destination?.options['is EU?']);
-                execSync(`rm -rf ${escapeForShell(file)}`)
+                await writeFile(file, JSON.stringify(peopleData))
+                if (config.destination.name.toLowerCase() !== 'mixpanel') {
+                    peopleImported += await sendOther(config.destination.name.toLowerCase(), config, file, `user`, peopleData)
+                } else {
+                    peopleImported += await sendProfilesToMixpanel(file, config.destination?.options['is EU?']);
+                }
+                if (!config.source?.options?.save_local_copy) {
+                    console.log(`deleting ${file}`)
+                    execSync(`rm -rf ${escapeForShell(file)}`)
+                }
                 lastPage = peopleRes.page;
                 lastNumResults = peopleRes.results.length;
 
