@@ -1,16 +1,12 @@
 //forked from: https://github.com/ak--47/mpBatchImport-node
 
 //DEPENDENCIES
-
-import { readFile } from 'fs';
-import { promisify } from 'util';
-import {readFile as read} from 'fs/promises'
+import { existsSync, createReadStream } from 'fs';
+import { readFile as read } from 'fs/promises'
 import fetch from 'node-fetch'; //https://www.npmjs.com/package/node-fetch
-import md5 from 'md5'; //https://www.npmjs.com/package/md5
-import isGzip from 'is-gzip'; //https://www.npmjs.com/package/is-gzip
 import gun from 'node-gzip'; //https://www.npmjs.com/package/node-gzip
+import split from 'split'
 
-const readFilePromisified = promisify(readFile);
 
 
 //CONFIG + LIMITS
@@ -23,22 +19,47 @@ const BYTES_PER_BATCH = 2 * 1024 * 1024
 
 async function main(credentials = {}, dataFile = ``, isEU, isAlreadyABatch = false) {
     let ENDPOINT_URL = isEU ? ENDPOINT_URL_EU : ENDPOINT_URL_US;
-    let allData;
+    let allData = [];
+    let didStream = false;
 
     if (isAlreadyABatch) {
         allData = dataFile
     } else {
-        //LOAD data files
-        let file = await read(dataFile, "utf-8").catch((e) => {
-            console.error(`failed to load ${dataFile}... does it exist?\n`);
-            console.log(`if you require some test data, try 'npm run generate' first...`);
-            process.exit(1);
-        });
+        //make sure file exists
+        try {
+            existsSync(dataFile)
+        } catch (e) {
+            console.error(`could not find ${dataFile} ... does it exist?`)
+        }
+
+        //LOAD data files; stream if it's too big
+        try {
+            let file = await read(dataFile, "utf-8");
+        } catch (e) {
+            console.log(`       file is big... switch to streaming...`)
+            didStream = true
+            async function streamJSON(dataFile) {
+                return new Promise((resolve, reject) => {
+                    createReadStream(dataFile)
+                        .pipe(split(JSON.parse, null, { trailing: false }))
+                        .on('data', function(obj) {
+                            allData.push(obj)
+                        })
+                        .on('end', function() {
+                            resolve()
+                        })
+                })
+            }
+            await streamJSON(dataFile)
+        }
 
 
-        //UNIFY
-        //if it's already JSON, just use that
+    }
 
+
+    //UNIFY
+    //if it's already JSON, just use that
+    if (!didStream) {
         try {
             allData = JSON.parse(file)
         } catch (e) {
@@ -47,15 +68,15 @@ async function main(credentials = {}, dataFile = ``, isEU, isAlreadyABatch = fal
                 allData = file.trim().split('\n').map(line => JSON.parse(line));
             } catch (e) {
                 //if we don't have JSON or NDJSON... fail...
-                console.log('failed to parse data... only valid JSON or NDJSON is supported by this script')
+                console.log('       failed to parse data... only valid JSON or NDJSON is supported by this script')
                 console.log(e)
                 return 0;
             }
         }
-
-        console.log(`       parsed ${numberWithCommas(allData.length)} events from ${dataFile}`);
-
     }
+    console.log(`       parsed ${numberWithCommas(allData.length)} events from ${dataFile}`);
+
+
 
 
     //CHUNK
@@ -76,19 +97,17 @@ async function main(credentials = {}, dataFile = ``, isEU, isAlreadyABatch = fal
     let numRecordsImported = 0;
     for (let eventBatch of compressed) {
         try {
-        let result = await sendDataToMixpanel(credentials, eventBatch);
-        // console.log(`   done ✅`)
-        // console.log(`   mixpanel response:`)
-        // console.log(result);
-        //console.log('\n')        
-        try {
-        numRecordsImported += result.num_records_imported || 0;
-        }
-        catch (e) {
-            
-        }
-        }
-        catch (e) {
+            let result = await sendDataToMixpanel(credentials, eventBatch);
+            // console.log(`   done ✅`)
+            // console.log(`   mixpanel response:`)
+            // console.log(result);
+            //console.log('\n')        
+            try {
+                numRecordsImported += result.num_records_imported || 0;
+            } catch (e) {
+
+            }
+        } catch (e) {
 
         }
     }
