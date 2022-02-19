@@ -90,7 +90,7 @@ async function amplitudeFlush(creds, data, type) {
                 api_key: creds.apiKey
             }
         }
-        console.log(`\namplitude events:`)
+        //console.log(`\namplitude events:`)
         for (const chunk of chunks) {
             options.data.events = chunk;
             await axios(options).then(function(response) {
@@ -106,7 +106,7 @@ async function amplitudeFlush(creds, data, type) {
     //https://developers.amplitude.com/docs/identify-api#keys-for-the-identification-argument
     else if (type === "users") {
         const chunks = _.chunk(data, 1000);
-        console.log(`\namplitude users:`)
+        //console.log(`\namplitude users:`)
         for (const chunk of chunks) {
             let options = {
                 url: `https://api2.amplitude.com/identify`,
