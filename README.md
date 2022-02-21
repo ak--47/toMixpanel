@@ -79,6 +79,12 @@ you can find more configuration examples [in the repo](https://github.com/ak--47
 
 required params: `api_key`, `api_secret`, `start_date`, `end_date`, `is EU?`
 
+- [mixpanel](https://github.com/ak--47/toMixpanel/blob/main/examples/configExample-mixpanel.json)
+
+that's right! you can use `toMixpanel` to migrate one mixpanel project to another!
+required params: `token`, `secret`, `start_date`, `end_date`, `is EU?`, `do_events`, `do_people`
+options: `where` ([see docs](https://developer.mixpanel.com/reference/segmentation-expressions)), `event` ([see docs](https://developer.mixpanel.com/reference/raw-event-export))
+
 - [csv](https://github.com/ak--47/toMixpanel/blob/main/examples/configExample-csv.json)
 
 required params: `filePath`, `event_name_col`, `distinct_id_col`, `time_col`, `insert_id_col`
