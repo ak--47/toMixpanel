@@ -21,7 +21,8 @@ async function main(credentials = {}, dataFile = ``, isEU, isAlreadyABatch = fal
     let ENDPOINT_URL = isEU ? ENDPOINT_URL_EU : ENDPOINT_URL_US;
     let allData = [];
     let didStream = false;
-
+    let file;
+    
     if (isAlreadyABatch) {
         allData = dataFile
     } else {
@@ -32,9 +33,10 @@ async function main(credentials = {}, dataFile = ``, isEU, isAlreadyABatch = fal
             console.error(`could not find ${dataFile} ... does it exist?`)
         }
 
+        
         //LOAD data files; stream if it's too big
         try {
-            let file = await read(dataFile, "utf-8");
+            file = await read(dataFile, "utf-8");
         } catch (e) {
             console.log(`       file is big... switch to streaming...`)
             didStream = true
