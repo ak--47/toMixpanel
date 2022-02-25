@@ -210,13 +210,9 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
                     };
 
                 }
-
-                //de-dupe the merge table
-                //let mergeTableDeDuped = Array.from(new Set(mergeTable.map(o => JSON.stringify(o))), s => JSON.parse(s));
+                          
                 totalMergeTables += mergeTable.length
                 mergeTables.push(mergeTable[0])
-                //console.log(`       creating merge tables... (${smartCommas(mergeTableDeDuped.length)} entries)`);
-
 
             }
             console.log(`       transformed ${filePath}`)
@@ -265,8 +261,7 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
             //try to dedupe merge tables
             let finalMergeTables;
             try {
-                finalMergeTables = _.uniqBy(mergeTables, 'properties.$insert_id').filter(a => a)
-                //finalMergeTables = _.uniqWith(mergeTables, _.isEqual).filter(a => a)
+                finalMergeTables = _.uniqBy(mergeTables, 'properties.$insert_id').filter(a => a)                
             } catch (e) {
                 finalMergeTables = mergeTables.filter(a => a)
             }
