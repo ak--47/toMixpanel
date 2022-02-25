@@ -1,5 +1,5 @@
 #!/usr/bin/env node
- // toMixpanel is your one-stop-shop ETL to get data from various sources... into Mixpanel!
+// toMixpanel is your one-stop-shop ETL to get data from various sources... into Mixpanel!
 // by AK
 // ak@mixpanel.com
 

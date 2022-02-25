@@ -8,7 +8,7 @@ import { default as zip } from 'adm-zip';
 import { default as gun } from 'node-gzip';
 import { execSync } from 'child_process'
 import dayjs from 'dayjs';
-
+const streamOpts = { highWaterMark: Math.pow(2, 27) };
 
 
 
@@ -39,8 +39,10 @@ async function main(creds, options, directory = "foo", isEU) {
     mkdirSync(`${dataPath}/unzip`)
     mkdirSync(`${dataPath}/json`)
 
-    let auth = "Basic " + Buffer.from(creds.apiKey + ":" + creds.apiSecret).toString('base64')
-    console.log(`   calling /export amplitude api for ${dayjs(options.start).format('MM-DD-YYYY')} - ${dayjs(options.end).format('MM-DD-YYYY')}...`)
+    let auth = "Basic " + Buffer.from(creds.apiKey + ":" + creds.apiSecret).toString('base64');
+    let startForConsole = dayjs(options.start).format('MM-DD-YYYY THH');
+    let endForConsole = dayjs(options.end).format('MM-DD-YYYY THH');
+    console.log(`   calling /export amplitude api for ${startForConsole} - ${endForConsole}`)
     const response = await fetch(`${baseURL}?start=${options.start}&end=${options.end}`, {
         headers: {
             "Authorization": auth
@@ -56,12 +58,18 @@ async function main(creds, options, directory = "foo", isEU) {
     //download archive
     console.log('   downloading data...');
     writePath = path.resolve(`${dataPath}/downloaded`)
-    await streamPipeline(response.body, createWriteStream(`${writePath}/data.zip`));
+    try {
+    await streamPipeline(response.body, createWriteStream(`${writePath}/data.zip`, streamOpts));
+    }
+    catch (e) {
+        console.log(`error downloading data`)
+        console.log(e)
+    }
     const stats = statSync(`${writePath}/data.zip`);
     const fileSizeInBytes = stats.size;
     const fileSizeInMegabytes = fileSizeInBytes / 1000000.0;
 
-    //un zip
+    //unzip
     console.log(`   unzipping data... (${fileSizeInMegabytes} MB)`)
     writePath = path.resolve(`${dataPath}/unzip`);
     let filesToUngzip = [];
