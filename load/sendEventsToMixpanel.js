@@ -6,7 +6,7 @@ import { readFile as read } from 'fs/promises'
 import fetch from 'node-fetch'; //https://www.npmjs.com/package/node-fetch
 import gun from 'node-gzip'; //https://www.npmjs.com/package/node-gzip
 import split from 'split'
-
+const streamOpts = { highWaterMark: Math.pow(2,27) }; 
 
 
 //CONFIG + LIMITS
@@ -42,7 +42,7 @@ async function main(credentials = {}, dataFile = ``, isEU, isAlreadyABatch = fal
             didStream = true
             async function streamJSON(dataFile) {
                 return new Promise((resolve, reject) => {
-                    createReadStream(dataFile)
+                    createReadStream(dataFile, streamOpts)
                         .pipe(split(JSON.parse, null, { trailing: false }))
                         .on('data', function(obj) {
                             allData.push(obj)

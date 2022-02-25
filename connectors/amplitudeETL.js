@@ -1,6 +1,7 @@
 //deps
 import dayjs from 'dayjs';
 import * as path from 'path';
+import { readdir } from 'fs/promises';
 
 //scripts
 import amplitudeExtract from '../extract/amplitude.js'
@@ -15,19 +16,28 @@ async function amplitudeETL(config, directoryName) {
         apiSecret: config.source.params.api_secret
     }
 
-    let {start_date, end_date} = config.source.params;
+    let { start_date, end_date } = config.source.params;
     //co-erce the dates to amp format
     let dates = {
         start: dayjs(start_date).format('YYYYMMDDTHH'),
         end: dayjs(end_date).format('YYYYMMDDTHH')
     }
-    
-            
 
-    console.log('EXTRACT!\n')
-    let extractedData = await amplitudeExtract(credentials, dates, directoryName, config.source.options['is EU?']);
-    if (!extractedData) {
-        return false;
+    let extractedData;
+    if (config.source.options?.path) {
+        //path to data already specified
+        let filesPath = path.resolve(config.source.options?.path)
+        console.log(`local path specified: ${filesPath}`)
+        let files = (await readdir(filesPath)).map(fileLoc => path.resolve(`${filesPath}/${fileLoc}`))
+        console.log(`found ${files.length} files`)
+        extractedData = files;
+    } else {
+
+        console.log('EXTRACT!\n')
+        extractedData = await amplitudeExtract(credentials, dates, directoryName, config.source.options['is EU?']);
+        if (!extractedData) {
+            return false;
+        }
     }
     console.log('TRANSFORM!\n')
     let transformedData = await amplitudeTransform(extractedData, `./savedData/${directoryName}`, config.destination.token);
@@ -43,7 +53,12 @@ async function amplitudeETL(config, directoryName) {
     let totalEventsImported = -1;
     //events
     for await (let eventDataFile of eventPaths) {
-        let eventsImported = await sendEventsToMixpanel(mixpanelCreds, eventDataFile, config.destination.options['is EU?']);
+        let eventsImported;
+        try {
+            eventsImported = await sendEventsToMixpanel(mixpanelCreds, eventDataFile, config.destination.options['is EU?']);
+        } catch (e) {
+
+        }
         totalEventsImported += eventsImported
     }
 
@@ -54,7 +69,12 @@ async function amplitudeETL(config, directoryName) {
     //mergeTables
     let totalMergeTables = -1
     for await (let mergeTable of mergeTablePaths) {
-        let mergeTablesImported = await sendEventsToMixpanel(mixpanelCreds, mergeTable, config.destination.options['is EU?']);
+        let mergeTablesImported
+        try {
+            mergeTablesImported = await sendEventsToMixpanel(mixpanelCreds, mergeTable, config.destination.options['is EU?']);
+        } catch (e) {
+
+        }
         totalMergeTables += mergeTablesImported
     }
 
@@ -64,7 +84,12 @@ async function amplitudeETL(config, directoryName) {
     console.log('   profiles:\n')
     let totalUsersImported = 0
     for await (let profileFile of profilePaths) {
-        let profilesImported = await sendProfilesToMixpanel(profileFile, config.destination.options['is EU?'])
+        let profilesImported;
+        try {
+            profilesImported = await sendProfilesToMixpanel(profileFile, config.destination.options['is EU?'])
+        } catch (e) {
+
+        }
         totalUsersImported += profilesImported
     }
 
@@ -75,7 +100,7 @@ async function amplitudeETL(config, directoryName) {
     ${smartCommas(totalEventsImported)} events imported
     ${smartCommas(totalMergeTables)} users merged
     ${smartCommas(totalUsersImported)} profiles updated`)
-        
+
 
 
 }
