@@ -24,6 +24,12 @@ npm install
 node index.js ./path-To-JSON-config
 ```
 
+alternatively:
+
+```
+npx to-mixpanel ./path-To-JSON-config
+```
+
 ## Detailed Instructions
 
 ### Install Dependencies

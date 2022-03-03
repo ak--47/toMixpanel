@@ -1,16 +1,20 @@
 {
-  "name": "tomixpanel",
+  "name": "to-mixpanel",
   "version": "1.0.1",
   "description": "ETL for data into Mixpanel from many sources",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "prune": "rm -rf ./savedData/* ./logs/*",
+    "publish": "npm publish",
     "amplitude": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configAMP.json",
     "ga360": "npm run prune && node --inspect --max_old_space_size=8192 ./index.js ./dev/configGA360.json",
     "csv": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configCSV.json",
     "mixpanel": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configMP.json | tee -a ./logs/mp-log.txt",
     "dev": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configDev.json | tee -a ./logs/mp-log.txt"
+  },
+  "bin": {
+    "mixpanel-import": "./index.js"
   },
   "type": "module",
   "keywords": [],
