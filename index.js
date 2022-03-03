@@ -22,7 +22,7 @@ global.nowTime = Date.now();
 
 
 async function main() {
-    console.time("main");
+    console.time("THE GREAT MIGRATION TOOK");
     console.log('\nstarting up!\n')
     //figure out where config is
     let cliArgs = process.argv;
@@ -99,8 +99,8 @@ async function main() {
 
         console.log(`you can now see your data in mixpanel!\nhttps://mixpanel.com/project/${config.destination.project_id}/`)
         console.log('\n')
-        console.metrics();
-        console.timeEnd("main")
+        // console.metrics();
+        console.timeEnd("THE GREAT MIGRATION TOOK")
         process.exit()
 
     }

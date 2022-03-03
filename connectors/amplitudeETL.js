@@ -2,12 +2,14 @@
 import dayjs from 'dayjs';
 import * as path from 'path';
 import { readdir } from 'fs/promises';
+import mpImport from 'mixpanel-import'
 
 //scripts
 import amplitudeExtract from '../extract/amplitude.js'
 import amplitudeTransform from '../transform/amplitudeToMixpanel.js'
 import sendEventsToMixpanel from '../load/sendEventsToMixpanel.js'
 import sendProfilesToMixpanel from '../load/sendProfilesToMixpanel.js'
+
 
 async function amplitudeETL(config, directoryName) {
     //for auth
@@ -44,62 +46,28 @@ async function amplitudeETL(config, directoryName) {
 
     console.log('LOAD!')
     console.log('   events:\n')
-    let { events: eventPaths, profiles: profilePaths, mergeTables: mergeTablePaths } = transformedData;
-    let mixpanelCreds = {
-        username: config.destination.service_account_user,
-        password: config.destination.service_account_pass,
-        project_id: config.destination.project_id
+    let eventsDir = path.resolve(`./savedData/${directoryName}/transformed/events`);
+    let usersDir = path.resolve(`./savedData/${directoryName}/transformed/profiles`);
+    let mergeDir = path.resolve(`./savedData/${directoryName}/transformed/mergeTables`);
+
+    let creds  = {
+        acct: config.destination.service_account_user,
+        pass: config.destination.service_account_pass,
+        project: config.destination.project_id,
+        token: config.destination.token
+
     }
-    let totalEventsImported = -1;
-    //events
-    for await (let eventDataFile of eventPaths) {
-        let eventsImported;
-        try {
-            eventsImported = await sendEventsToMixpanel(mixpanelCreds, eventDataFile, config.destination.options['is EU?']);
-        } catch (e) {
+    let region = (config.destination?.options['is EU?'] ? `EU` : `US`);
 
-        }
-        totalEventsImported += eventsImported
-    }
-
-    console.log(`\nEVENT IMPORT FINISHED! imported ${smartCommas(totalEventsImported)} events\n`);
-
-    console.log('LOAD!')
-    console.log('   identity resolution:\n')
-    //mergeTables
-    let totalMergeTables = -1
-    for await (let mergeTable of mergeTablePaths) {
-        let mergeTablesImported
-        try {
-            mergeTablesImported = await sendEventsToMixpanel(mixpanelCreds, mergeTable, config.destination.options['is EU?']);
-        } catch (e) {
-
-        }
-        totalMergeTables += mergeTablesImported
-    }
-
-    console.log(`\nIDENTITY RESOLVE FINISHED! imported ${smartCommas(totalMergeTables)} merged users\n`);
-
-    console.log('LOAD!')
-    console.log('   profiles:\n')
-    let totalUsersImported = 0
-    for await (let profileFile of profilePaths) {
-        let profilesImported;
-        try {
-            profilesImported = await sendProfilesToMixpanel(profileFile, config.destination.options['is EU?'])
-        } catch (e) {
-
-        }
-        totalUsersImported += profilesImported
-    }
-
-    console.log(`\nPROFILES FINISHED! imported ${smartCommas(totalUsersImported)} profiles\n`);
+    let importedEvents = await mpImport(creds, eventsDir, {recordType: `event`, logs: true, region });    
+    let imporedProfiles = await mpImport(creds, usersDir, {recordType: `user`, logs: true, region });
+    let importedMergeTables = await mpImport(creds, mergeDir, {recordType: `event`, logs: true, region });
 
     console.log(`\nSUMMARY:`)
     console.log(`
-    ${smartCommas(totalEventsImported)} events imported
-    ${smartCommas(totalMergeTables)} users merged
-    ${smartCommas(totalUsersImported)} profiles updated`)
+    ${smartCommas(importedEvents.results?.totalRecordCount)} events imported
+    ${smartCommas(imporedProfiles.results?.totalRecordCount)} users merged
+    ${smartCommas(importedMergeTables.results?.totalRecordCount)} profiles updated`)
 
 
 
