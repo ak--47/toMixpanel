@@ -68,7 +68,7 @@ async function main() {
     //determine which etl to run
     switch (config.source.name.toLowerCase()) {
         case 'amplitude':
-            console.log(`lets migrate data from ${config.source.name} to Mixpanel!\n\n`);
+            console.log(`lets migrate data from ${config.source.name} to ${config.destination.name}!\n\n`);
             await amplitudeETL(config, directoryName);
             cleanUp()
             break;
@@ -100,8 +100,10 @@ async function main() {
             `)
         }
 
-        console.log(`you can now see your data in mixpanel!\nhttps://mixpanel.com/project/${config.destination.project_id}/`)
-        console.log('\n')
+        if (config.destination?.name === `mixpanel`) {
+            console.log(`you can now see your data in mixpanel!\nhttps://mixpanel.com/project/${config.destination.project_id}/`)
+            console.log('\n')
+        }
         // console.metrics();
         console.timeEnd("THE GREAT MIGRATION TOOK")
         process.exit()

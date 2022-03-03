@@ -74,7 +74,7 @@ async function mixpanelETL(config, directoryName) {
         let fileName = `${start_date}_to_${end_date}.jsonl`
         let file = path.resolve(`./savedData/${directoryName}/${fileName}`)
         let queryString = `from_date=${start_date}&to_date=${end_date}`
-     
+
 
         //add where and event clauses if specific
         if (config.source?.options?.where) {
@@ -125,9 +125,14 @@ async function mixpanelETL(config, directoryName) {
             }
         });
 
-        await writeFile(file, JSON.stringify(peopleData, null, 2))
-        let req = await mpImport(mixpanelCreds, file, {recordType: `user`, logs: true, region });
-        peopleImported += req.results.totalRecordCount 
+        await writeFile(file, JSON.stringify(peopleData));
+        if (config.destination.name.toLowerCase() !== 'mixpanel') {
+            peopleImported += await sendOther(config.destination.name.toLowerCase(), config, file, `user`, peopleData)
+        } else {
+            let req = await mpImport(mixpanelCreds, file, { recordType: `user`, logs: true, region });
+            peopleImported += req.results.totalRecordCount
+        }
+
         execSync(`rm -rf ${escapeForShell(file)}`)
         let lastPage = peopleRes.page;
         let lastSession = peopleRes.session_id;
@@ -158,8 +163,8 @@ async function mixpanelETL(config, directoryName) {
             if (config.destination.name.toLowerCase() !== 'mixpanel') {
                 peopleImported += await sendOther(config.destination.name.toLowerCase(), config, file, `user`, peopleData)
             } else {
-                let req = await mpImport(mixpanelCreds, file, {recordType: `user`, logs: true, region });
-                peopleImported += req.results.totalRecordCount                
+                let req = await mpImport(mixpanelCreds, file, { recordType: `user`, logs: true, region });
+                peopleImported += req.results.totalRecordCount
             }
             if (!config.source?.options?.save_local_copy) {
                 console.log(`deleting ${file}`)
