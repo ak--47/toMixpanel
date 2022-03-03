@@ -1,4 +1,5 @@
-#!/usr/bin/env node
+#! /usr/bin/env node
+
 // toMixpanel is your one-stop-shop ETL to get data from various sources... into Mixpanel!
 // by AK
 // ak@mixpanel.com
@@ -56,6 +57,8 @@ async function main() {
             mkdirSync(path.resolve(`./savedData/${directoryName}/`));
         }
     } catch (error) {
+        //probably being run outside the codebase;
+        mkdirSync(path.resolve(`./savedData/`));
         mkdirSync(path.resolve(`./savedData/${directoryName}/`));
     }
 

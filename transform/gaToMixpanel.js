@@ -5,9 +5,12 @@ import dayjs from 'dayjs';
 import * as path from 'path';
 import md5 from 'md5';
 import { validate } from 'jsonschema';
+import {fileURLToPath} from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
-const gaSchema = JSON.parse(readFileSync(path.resolve('./transform/gaSchema.json'), 'utf-8'));
+const gaSchema = JSON.parse(readFileSync(path.resolve(path.join(__dirname, '/gaSchema.json')), 'utf-8'));
 const readFilePromisified = promisify(readFile);
 const writeFilePromisified = promisify(writeFile);
 
