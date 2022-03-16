@@ -5,7 +5,7 @@
             "api_key": "{{amplitude api key}}",
             "api_secret": "{{ amplitude api secret }}",
             "start_date" : "2021-09-17",
-            "end_date": "2021-09-17"
+            "end_date": "2022-02-02"
         },
         "options" : {
             "save_local_copy": true,

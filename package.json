@@ -1,6 +1,6 @@
 {
   "name": "to-mixpanel",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "ETL for data into Mixpanel from many sources",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "dev": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configDev.json | tee -a ./logs/mp-log.txt"
   },
   "bin": {
-    "mixpanel-import": "./index.js"
+    "to-mixpanel": "./index.js"
   },
   "type": "module",
   "keywords": [],
