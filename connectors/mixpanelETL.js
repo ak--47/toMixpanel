@@ -1,5 +1,5 @@
 import { execSync } from 'child_process'
-import { writeFile } from 'fs/promises';
+import { writeFile, readFile } from 'fs/promises';
 import dayjs from 'dayjs';
 import _ from 'lodash';
 import * as path from 'path';
@@ -109,9 +109,12 @@ async function mixpanelETL(config, directoryName) {
         //ETL for people
         let iterations = 0;
         let fileName = `people-${iterations}.json`
+		let tempFileName = `people-${iterations}-source.json`
         let file = path.resolve(`./savedData/${directoryName}/${fileName}`)
-        let curlForData = `curl -sS --request POST --url ${ENDPOINT_URL_PEOPLE} --header 'Accept: application/json' --header 'Authorization: ${auth}' --header 'Content-Type: application/x-www-form-urlencoded' --data include_all_users=false`;
-        let peopleRes = JSON.parse(execSync(curlForData).toString('utf-8'));
+		let tempFilePath = path.resolve(`./savedData/${directoryName}/${tempFileName}`)
+        let curlForData = `curl -sS --request POST --url ${ENDPOINT_URL_PEOPLE} --header 'Accept: application/json' --header 'Authorization: ${auth}' --header 'Content-Type: application/x-www-form-urlencoded' --data include_all_users=false  --output ${escapeForShell(tempFilePath)}`;
+		let proc = execSync(curlForData)
+        let peopleRes = JSON.parse(await readFile(tempFilePath, "utf-8"));
         //reshape peopleData
         let peopleData = peopleRes.results.map(function(person) {
             return {
@@ -143,9 +146,12 @@ async function mixpanelETL(config, directoryName) {
             iterations++
             fileName = `people-${iterations}.json`
             file = path.resolve(`./savedData/${directoryName}/${fileName}`)
+			tempFileName = `people-${iterations}-source.json`
+			tempFilePath = path.resolve(`./savedData/${directoryName}/${tempFileName}`)
 
-            curlForData = `curl -sS --request POST --url ${ENDPOINT_URL_PEOPLE} --header 'Accept: application/json' --header 'Authorization: ${auth}' --header 'Content-Type: application/x-www-form-urlencoded' --data include_all_users=false --data session_id=${lastSession} --data page=${lastPage}`;
-            peopleRes = JSON.parse(execSync(curlForData).toString('utf-8'));
+            curlForData = `curl -sS --request POST --url ${ENDPOINT_URL_PEOPLE} --header 'Accept: application/json' --header 'Authorization: ${auth}' --header 'Content-Type: application/x-www-form-urlencoded' --data include_all_users=false --data session_id=${lastSession} --data page=${lastPage} --output ${escapeForShell(tempFilePath)}`;
+			proc = execSync(curlForData)
+            peopleRes = JSON.parse(await readFile(tempFilePath, "utf-8"));
             //reshape peopleData
             peopleData = peopleRes.results.map(function(person) {
                 return {

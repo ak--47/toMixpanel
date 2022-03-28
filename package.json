@@ -1,6 +1,6 @@
 {
   "name": "to-mixpanel",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "ETL for data into Mixpanel from many sources",
   "main": "index.js",
   "scripts": {
