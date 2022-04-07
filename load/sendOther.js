@@ -53,7 +53,7 @@ async function ampSend(config, dataFile, recordType, batch) {
             return tempObj;
         })
 
-        await amplitudeFlush(creds, allData, `events`)
+        await amplitudeFlush(creds, allData, `events`)		
         return allData.length
 
     }
@@ -93,8 +93,10 @@ async function amplitudeFlush(creds, data, type) {
         //console.log(`\namplitude events:`)
         for (const chunk of chunks) {
             options.data.events = chunk;
+			await sleep(2000) // HACK!
             await axios(options).then(function(response) {
-                // console.log(response.data);
+			
+				// console.log(response.data);
             }).catch(function(error) {
                 // uh oh!
                 console.log(error);
@@ -129,5 +131,11 @@ async function amplitudeFlush(creds, data, type) {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
 }
+
+
+function sleep (milliseconds) {
+	console.log(`sleeping 2 seconds (amp rate limit)`)
+	return new Promise((resolve) => setTimeout(resolve, milliseconds))
+  }
 
 export default main
