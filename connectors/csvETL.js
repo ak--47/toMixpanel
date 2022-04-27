@@ -13,15 +13,15 @@ async function main(config, directoryName) {
     let totalEventsImported = 0;
     let totalUsersImported = 0;
     let counter = 1;
-    
+
     let isDirectory = fs.lstatSync(config.source.params.filePath).isDirectory();
     if (isDirectory) {
-        console.log(`${config.source.params.filePath} is a directory`)        
+        console.log(`${config.source.params.filePath} is a directory`)
         let allFiles = await readdir(config.source.params.filePath);
         for (let file of allFiles) {
             files.push(path.resolve(`${config.source.params.filePath}/${file}`))
         }
-        console.log(`found ${smartCommas(files.length)} files\n\n`)                
+        console.log(`found ${smartCommas(files.length)} files\n\n`)
 
     } else {
         files.push(config.source.params.filePath)
@@ -49,7 +49,7 @@ async function main(config, directoryName) {
                 throw new Error();
             }
             data = parsed.data;
-            
+
             console.log(`   found ${smartCommas(data.length)} events`);
         } catch (e) {
             console.log(`   error: could not parse ${file} as CSV`)
@@ -72,7 +72,18 @@ async function main(config, directoryName) {
             delete event[cols.event_name_col]
 
             //fix time
-            event[cols.time_col] = dayjs(event[cols.time_col]).unix();
+            let eventTime = event[cols.time_col];
+            if (isNum(eventTime)) {
+                //unix ms is usually 13+ digits
+                if (eventTime.toString().length >= 13) {
+                    event[cols.time_col] = dayjs(Number(eventTime)).unix()
+                } else {
+                    event[cols.time_col] = dayjs.unix(Number(eventTime)).unix()
+                }
+            } else {
+                event[cols.time_col] = dayjs(eventTime).unix();
+            }
+
 
             //ignore cols
             if (config.source.options?.ignore_cols?.length >= 1) {
@@ -98,6 +109,9 @@ async function main(config, directoryName) {
 
             //tag :)
             transformedEvent.properties.$source = `csvtoMixpanel (by AK)`
+            if (config.source?.options?.tag) {
+                transformedEvent.properties['import-tag'] = config.source?.options?.tag
+            }
 
             events.push(transformedEvent);
 
@@ -112,6 +126,11 @@ async function main(config, directoryName) {
                         "uuid": transformedEvent.properties.distinct_id
                     }
                 }
+
+                if (config.source?.options?.tag) {
+                    profile.$set['import-tag'] = config.source?.options?.tag
+                }
+
                 profiles.push(profile);
             }
 
@@ -159,7 +178,7 @@ async function main(config, directoryName) {
     console.log(`\nSUMMARY:`)
     console.log(`
     ${smartCommas(totalEventsImported)} events imported
-    ${smartCommas(totalUsersImported)} profiles updated`)    
+    ${smartCommas(totalUsersImported)} profiles updated`)
 
 }
 
@@ -173,6 +192,10 @@ function renameKeys(newObject, oldObject, newKey, oldKey) {
 //logging stuffs
 function smartCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function isNum(val) {
+    return !isNaN(val)
 }
 
 

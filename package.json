@@ -1,6 +1,6 @@
 {
   "name": "to-mixpanel",
-  "version": "1.0.9",
+  "version": "1.1",
   "description": "ETL for data into Mixpanel from many sources",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,7 @@
     "ga360": "npm run prune && node --inspect --max_old_space_size=8192 ./index.js ./dev/configGA360.json",
     "csv": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configCSV.json",
     "mixpanel": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configMP.json | tee -a ./logs/mp-log.txt",
-    "dev": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configDev.json | tee -a ./logs/mp-log.txt"
+    "dev": "npm run prune && nodemon --ignore ./savedData --inspect --max_old_space_size=8192 ./index.js ./dev/configDevCSV.json | tee -a ./logs/mp-log.txt"
   },
   "bin": {
     "to-mixpanel": "./index.js"

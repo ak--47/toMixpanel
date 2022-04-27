@@ -11,7 +11,8 @@
         "options" : {
             "ignore_cols": ["favoriteColor"],
             "save_local_copy": false,
-            "create_profiles": true
+            "create_profiles": true,
+			"tag": "an arbitrary tag for the data"
         }
     },
     "destination": {
