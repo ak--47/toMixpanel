@@ -32,7 +32,7 @@ async function main(config, directoryName) {
         let fileContents;
         try {
             console.log(`	reading ${file}`)
-            fileContents = await (await readFile(file)).toString('utf-8')
+            fileContents = await (await readFile(file)).toString('utf-8').trim()
 
 
         } catch (e) {
@@ -46,8 +46,8 @@ async function main(config, directoryName) {
         try {
             //parse CSV as json
             let parsed = Papa.parse(fileContents, { "header": true });
-            if (parsed.data.length === 0 || parsed.errors.length > 0) {
-                throw new Error();
+            if (parsed.data.length === 0 || parsed.errors.length > 0) {                
+				throw new Error();
             }
             data = parsed.data;
 
