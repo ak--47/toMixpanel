@@ -37,8 +37,8 @@ async function main(config, directoryName) {
 
         } catch (e) {
             console.log(`	error: could not load ${file} (does it exist?)`)
-            console.log(`\n`)
-            console.log(e.message)
+			console.log(e.message)
+            console.log(`\n`)            
             continue loopCSVfiles;
         }
 
@@ -54,6 +54,7 @@ async function main(config, directoryName) {
             console.log(`   found ${smartCommas(data.length)} events`);
         } catch (e) {
             console.log(`   error: could not parse ${file} as CSV`)
+			console.log(e.message)
             console.log(`\n`)
             continue loopCSVfiles;
         }
