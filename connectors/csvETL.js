@@ -38,6 +38,7 @@ async function main(config, directoryName) {
         } catch (e) {
             console.log(`	error: could not load ${file} (does it exist?)`)
             console.log(`\n`)
+            console.log(e.message)
             continue loopCSVfiles;
         }
 
