@@ -72,7 +72,8 @@ Here's an example of a configuration file for `amplitude` => `mixpanel`:
     "service_account_user": "{{ mp service account }}",
     "service_account_pass": "{{ mp service secret }}",
     "options": {
-      "is EU?": false
+      "is EU?": false,
+	  "recordsPerBatch": 2000
     }
   }
 }
@@ -85,13 +86,14 @@ you can find more configuration examples [in the repo](https://github.com/ak--47
 
 required params: `api_key`, `api_secret`, `start_date`, `end_date`, `is EU?`
 
+
 - [mixpanel](https://github.com/ak--47/toMixpanel/blob/main/examples/configExample-mixpanel.json)
 
 that's right! you can use `toMixpanel` to migrate one mixpanel project to another!
 
 required params: `token`, `secret`, `start_date`, `end_date`, `is EU?`, `do_events`, `do_people`
 
-options: `where` ([see docs](https://developer.mixpanel.com/reference/segmentation-expressions)), `event` ([see docs](https://developer.mixpanel.com/reference/raw-event-export))
+options: `where` ([see docs](https://developer.mixpanel.com/reference/segmentation-expressions)), `event` ([see docs](https://developer.mixpanel.com/reference/raw-event-export)), `recordsPerBatch` (in destination)
 
 - [csv](https://github.com/ak--47/toMixpanel/blob/main/examples/configExample-csv.json)
 

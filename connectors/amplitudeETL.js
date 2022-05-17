@@ -59,9 +59,9 @@ async function amplitudeETL(config, directoryName) {
     }
     let region = (config.destination?.options['is EU?'] ? `EU` : `US`);
 
-    let importedEvents = await mpImport(creds, eventsDir, {recordType: `event`, logs: true, region });    
-    let imporedProfiles = await mpImport(creds, usersDir, {recordType: `user`, logs: true, region });
-    let importedMergeTables = await mpImport(creds, mergeDir, {recordType: `event`, logs: true, region });
+    let importedEvents = await mpImport(creds, eventsDir, {recordType: `event`, logs: true, region, recordsPerBatch: config?.destination?.options?.recordsPerBatch || 2000 });    
+    let imporedProfiles = await mpImport(creds, usersDir, {recordType: `user`, logs: true, region, recordsPerBatch: config?.destination?.options?.recordsPerBatch || 2000 });
+    let importedMergeTables = await mpImport(creds, mergeDir, {recordType: `event`, logs: true, region, recordsPerBatch: config?.destination?.options?.recordsPerBatch || 2000 });
 
     console.log(`\nSUMMARY:`)
     console.log(`

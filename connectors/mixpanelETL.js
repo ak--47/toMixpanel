@@ -85,12 +85,12 @@ async function mixpanelETL(config, directoryName) {
         }
         console.log(`   hitting /export for ${start_date} to ${end_date}`)
         let curlForData = `curl -sS --request GET --url '${ENDPOINT_URL_EVENTS}?${queryString}' --header 'Accept: text/plain' --header 'Authorization: ${auth}' --output ${escapeForShell(file)}`
-        let fetchData = execSync(curlForData);
+        let fetchData = execSync(curlForData);		
 
         if (config.destination.name.toLowerCase() !== 'mixpanel') {
             eventsImported += await sendOther(config.destination.name.toLowerCase(), config, file, `event`)
         } else {
-            let req = await mpImport(mixpanelCreds, file, { recordType: `event`, logs: true, region });
+            let req = await mpImport(mixpanelCreds, file, { recordType: `event`, logs: true, region, recordsPerBatch: config?.destination?.options?.recordsPerBatch || 2000 });
             eventsImported += req.results.totalRecordCount
         }
 
@@ -169,7 +169,7 @@ async function mixpanelETL(config, directoryName) {
             if (config.destination.name.toLowerCase() !== 'mixpanel') {
                 peopleImported += await sendOther(config.destination.name.toLowerCase(), config, file, `user`, peopleData)
             } else {
-                let req = await mpImport(mixpanelCreds, file, { recordType: `user`, logs: true, region });
+                let req = await mpImport(mixpanelCreds, file, { recordType: `user`, logs: true, region, recordsPerBatch: config?.destination?.options?.recordsPerBatch || 2000 || 2000 });
                 peopleImported += req.results.totalRecordCount
             }
             if (!config.source?.options?.save_local_copy) {
