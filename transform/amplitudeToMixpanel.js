@@ -86,7 +86,8 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
                     .map((amplitudeEvent) => {
                         let profile = {
                             "$token": mpToken,
-                            "$distinct_id": amplitudeEvent.user_id,
+							//use device_id if user_id is not available; fallback on amplitude_id
+                            "$distinct_id": amplitudeEvent.user_id || amplitudeEvent.device_id || amplitudeEvent.amplitude_id.toString(),
                             "$ip": amplitudeEvent.ip_address,
                             "$set": amplitudeEvent.user_properties
                         }
