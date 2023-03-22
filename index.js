@@ -13,10 +13,10 @@ import dayjs from 'dayjs';
 import { execSync } from 'child_process'
 
 //connectors
-import amplitudeETL from './connectors/amplitudeETL.js'
-import googleAnalyticsETL from './connectors/googleAnalyticsETL.js'
-import csvETL from './connectors/csvETL.js'
-import mixpanelETL from './connectors/mixpanelETL.js'
+import amplitude from './connectors/amplitude.js'
+import googleAnalytics from './connectors/googleAnalytics.js'
+import csv from './connectors/csv.js'
+import mixpanel from './connectors/mixpanel.js'
 
 //global now!
 global.nowTime = Date.now();
@@ -69,22 +69,22 @@ async function main() {
     switch (config.source.name.toLowerCase()) {
         case 'amplitude':
             console.log(`lets migrate data from ${config.source.name} to ${config.destination.name}!\n\n`);
-            await amplitudeETL(config, directoryName);
+            await amplitude(config, directoryName);
             cleanUp()
             break;
         case 'googleanalytics':
             console.log(`lets migrate data from ${config.source.name} to Mixpanel!\n\n`);
-            await googleAnalyticsETL(config, directoryName);
+            await googleAnalytics(config, directoryName);
             cleanUp()
             break;
         case 'csv':
             console.log(`lets migrate ${config.source.name} data to Mixpanel!\n\n`);
-            await csvETL(config, directoryName);
+            await csv(config, directoryName);
             cleanUp()
             break;
         case 'mixpanel':
             console.log(`lets migrate ${config.source.name} data ... to mixpanel!`)
-            await mixpanelETL(config, directoryName);
+            await mixpanel(config, directoryName);
             cleanUp();
         default:
             console.log('could not determine data source')
