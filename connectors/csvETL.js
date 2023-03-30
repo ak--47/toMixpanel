@@ -1,5 +1,7 @@
 //deps
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc.js';
+dayjs.extend(utc);
 import * as path from 'path';
 import Papa from 'papaparse';
 import { readFile, writeFile, appendFile, readdir } from 'fs/promises';
@@ -84,7 +86,7 @@ async function main(config, directoryName) {
                     event[cols.time_col] = dayjs.unix(Number(eventTime)).unix()
                 }
             } else {
-                event[cols.time_col] = dayjs(eventTime).unix();
+                event[cols.time_col] = dayjs.utc(eventTime).unix();
             }
 
 

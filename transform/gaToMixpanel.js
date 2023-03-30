@@ -2,6 +2,8 @@
 import { createWriteStream, readFile, readFileSync, writeFile, statSync, mkdirSync, existsSync, readdir } from 'fs';
 import { promisify } from 'util';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc.js';
+dayjs.extend(utc);
 import * as path from 'path';
 import md5 from 'md5';
 import { validate } from 'jsonschema';

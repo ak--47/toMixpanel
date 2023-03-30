@@ -2,6 +2,9 @@
 import { createWriteStream, createReadStream, readFile, writeFile, statSync, mkdirSync, existsSync, readdir } from 'fs';
 import { promisify } from 'util';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc.js';
+dayjs.extend(utc);
+
 import * as path from 'path';
 import md5 from 'md5';
 import * as readline from 'readline'
@@ -120,7 +123,7 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
                             //prefer user_id, then device_id, then amplitude_id
                             "distinct_id": amplitudeEvent.user_id || amplitudeEvent.device_id || amplitudeEvent.amplitude_id.toString(),
                             "$device_id": amplitudeEvent.device_id,
-                            "time": dayjs(amplitudeEvent.event_time).valueOf(),
+							"time": dayjs.utc(amplitudeEvent.event_time).valueOf(),
                             "ip": amplitudeEvent.ip_address,
                             "$city": amplitudeEvent.city,
                             "$region": amplitudeEvent.region,
