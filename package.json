@@ -1,6 +1,6 @@
 {
   "name": "to-mixpanel",
-  "version": "1.1.32",
+  "version": "1.1.33",
   "description": "ETL for data into Mixpanel from many sources",
   "main": "index.js",
   "scripts": {
@@ -17,12 +17,23 @@
     "to-mixpanel": "./index.js"
   },
   "type": "module",
-  "keywords": ["mixpanel", "google analytics", "ga360", "csv", "events", "tracking", "migrate", "amplitude", "analytics"],
+  "keywords": [
+    "mixpanel",
+    "google analytics",
+    "ga360",
+    "csv",
+    "events",
+    "tracking",
+    "migrate",
+    "amplitude",
+    "analytics"
+  ],
   "author": "AK",
   "license": "ISC",
   "dependencies": {
     "@google-cloud/storage": "^5.15.6",
     "adm-zip": "^0.5.6",
+    "ak-tools": "^1.0.322",
     "axios": "^0.26.0",
     "dayjs": "^1.10.7",
     "dotenv": "^10.0.0",
