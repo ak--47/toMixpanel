@@ -290,7 +290,7 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
 			mergeTables = [];
 			//console.log('\n')
 		} catch (e) {
-			console.log(`error readding ${filePath}`);
+			console.log(`error reading ${filePath}`);
 			continue fileWalk;
 		}
 	}
