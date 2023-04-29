@@ -124,7 +124,7 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
 							"distinct_id": amplitudeEvent.user_id?.toString() || amplitudeEvent.device_id?.toString() || amplitudeEvent.amplitude_id.toString(),
 							"$device_id": amplitudeEvent.device_id,
 							"time": dayjs.utc(amplitudeEvent.event_time).valueOf(),
-							"$insert_id": ampEvent.$insert_id,
+							"$insert_id": amplitudeEvent.$insert_id,
 							"ip": amplitudeEvent.ip_address,
 							"$city": amplitudeEvent.city,
 							"$region": amplitudeEvent.region,
@@ -290,7 +290,7 @@ async function main(listOfFilePaths, directory = "./savedData/foo/", mpToken) {
 			mergeTables = [];
 			//console.log('\n')
 		} catch (e) {
-			console.log(`error readding ${filePath}`);
+			console.log(`error reading ${filePath}`);
 			continue fileWalk;
 		}
 	}
