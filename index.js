@@ -96,7 +96,7 @@ async function main() {
             console.log(`\ndeleting temp data\n`)
             execSync(`rm -rf ${escapeForShell(path.resolve(`./savedData/${directoryName}`))}`);
         } else {
-            console.log(`\nall data has been saved locally in ${path.resolve(directoryName)}\nyou can run 'npm run prune' to delete the data if you don't need it anymore
+            console.log(`\nall data has been saved locally in ${path.resolve(`./savedData/${directoryName}`)}\nyou can run 'npm run prune' to delete the data if you don't need it anymore
             `)
         }
 
