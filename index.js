@@ -47,7 +47,7 @@ async function main() {
     console.log(`found config @ ${configPath}\n`);
 
     //create a root folder for everything
-    const now = dayjs().format('YYYY-MM-DD HH.MM.ss.SSS A');
+    const now = dayjs().format('YYYY-MM-DD HH.MM.ss.SSS');
     const randomNum = getRandomInt(420);
     let directoryName = `${config.source.name} ${now} ${randomNum}`;
     try {
