@@ -47,9 +47,9 @@ async function main() {
     console.log(`found config @ ${configPath}\n`);
 
     //create a root folder for everything
-    const now = dayjs().format('YYYY-MM-DD HH.MM.ss.SSS A');
+    const now = dayjs().format('YYYY-MM-DD_HH.MM.ss.SSS');
     const randomNum = getRandomInt(420);
-    let directoryName = `${config.source.name} ${now} ${randomNum}`;
+    let directoryName = `${config.source.name}_${now}_${randomNum}`;
     try {
         if (config.source.options.path_to_data) {
             directoryName = path.resolve(`./${config.source.options.path_to_data}`)
@@ -96,7 +96,7 @@ async function main() {
             console.log(`\ndeleting temp data\n`)
             execSync(`rm -rf ${escapeForShell(path.resolve(`./savedData/${directoryName}`))}`);
         } else {
-            console.log(`\nall data has been saved locally in ${path.resolve(directoryName)}\nyou can run 'npm run prune' to delete the data if you don't need it anymore
+            console.log(`\nall data has been saved locally in ${path.resolve(`./savedData/${directoryName}`)}\nyou can run 'npm run prune' to delete the data if you don't need it anymore
             `)
         }
 
