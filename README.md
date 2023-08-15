@@ -1,5 +1,47 @@
 # to Mixpanel
 
+## update: 8/15/23
+
+**tldr;** this package is **deprecated**. use **[the new stuff](#new)**.
+
+originally the design of this module was an "all-in-one" ETL to bring data out of certain vendor tools into mixpanel to allow people to self-serve on data migrations and historical backfills.
+
+but, product analytics data is BIG, and doing any kind of significant data volume on your personal computer (over a consumer grade internet connection), with no way to "resume" a job, is unreliable.
+
+mixpanel has evolved dramatically over the last few years and with the release of [simple identity merge](https://docs.mixpanel.com/docs/tracking/how-tos/identifying-users#simplified-vs-original-id-merge) and our [migration packages](https://docs.mixpanel.com/docs/other-bits/tutorials/migration-guides), much of the functionality in this this module is _no longer relevant_.
+
+i have opted **not** to delete this repository, as the code works for certain cases (small data sets, mixpanel's [original identity merge](https://docs.mixpanel.com/docs/tracking/how-tos/identifying-users#simplified-vs-original-id-merge) with `$merge` events, and incremental user props), however this module will receive no further updates. 
+
+if you are looking to migrate your data from a vendor specific format to mixpanel, these are the packages you want:
+
+<div id="new">
+
+### Self-Serve Data Migration Tools
+
+**Amplitude**
+- https://github.com/ak--47/amp-ext 
+(extracting data)
+
+- https://github.com/ak--47/amp-to-mp 
+(transforming + loading data)
+
+**Heap**
+- https://github.com/ak--47/heap-to-mp 
+(transforming + loading data)
+
+**Adobe**
+- https://github.com/ak--47/adobe-to-mp 
+(transforming + loading data)
+
+**Generic**
+- https://github.com/ak--47/mixpanel-import 
+(import any type of data; you write the transform)
+
+if you need help moving your historical data to mixpanel [**contact us**](https://mixpanel.com/contact-us/sales) ... we will help! 💪
+</div>
+
+-------------
+
 ## wat.
 
 `toMixpanel` is an ETL script in Node.js that provides one-time data migrations from common product analytics tools... to mixpanel. 
